@@ -43,16 +43,6 @@
 namespace dart {
 namespace math {
 
-Eigen::Quaterniond matrixToQuat(Eigen::Matrix3d& mat)
-{
-    return Eigen::Quaterniond(mat);
-}
-
-Eigen::Matrix3d quatToMatrix(Eigen::Quaterniond& q)
-{
-    return Eigen::Matrix3d(q);
-}
-
 Eigen::Quaterniond expToQuat(Eigen::Vector3d& v)
 {
     double mag = v.norm();
@@ -574,7 +564,7 @@ Eigen::Matrix3d expMapJacDeriv(const Eigen::Vector3d& _q, int _qi )
 //    return ret;
 //}
 
-Eigen::Vector3d Log(const Eigen::Matrix3d& R)
+Eigen::Vector3d logMap(const Eigen::Matrix3d& R)
 {
     //--------------------------------------------------------------------------
     // T = (R, p) = exp([w, v]), t = ||w||
@@ -610,7 +600,7 @@ Eigen::Vector3d Log(const Eigen::Matrix3d& R)
     }
 }
 
-Eigen::Vector6d Log(const Eigen::Isometry3d& T)
+Eigen::Vector6d logMap(const Eigen::Isometry3d& T)
 {
     //--------------------------------------------------------------------------
     // T = (R, p) = exp([w, v]), t = ||w||
@@ -1227,7 +1217,7 @@ Eigen::Matrix3d eulerZYZToMatrix(const Eigen::Vector3d& angle)
 // R = Exp(w)
 // p = sin(t) / t*v + (t - sin(t)) / t^3*<w, v>*w + (1 - cos(t)) / t^2*(w X v)
 // , when S = (w, v), t = |w|
-Eigen::Isometry3d Exp(const Eigen::Vector6d& s)
+Eigen::Isometry3d expMap(const Eigen::Vector6d& s)
 {
     Eigen::Isometry3d ret = Eigen::Isometry3d::Identity();
     double s2[] = { s[0]*s[0], s[1]*s[1], s[2]*s[2] };
@@ -1256,7 +1246,7 @@ Eigen::Isometry3d Exp(const Eigen::Vector6d& s)
 }
 
 // I + sin(t) / t*[S] + (1 - cos(t)) / t^2*[S]^2, where t = |S|
-Eigen::Isometry3d ExpAngular(const Eigen::Vector3d& S)
+Eigen::Isometry3d expAngular(const Eigen::Vector3d& S)
 {
     Eigen::Isometry3d ret = Eigen::Isometry3d::Identity();
     double s2[] = { S[0]*S[0], S[1]*S[1], S[2]*S[2] };
@@ -1280,35 +1270,6 @@ Eigen::Isometry3d ExpAngular(const Eigen::Vector3d& S)
     ret(0,0) = beta*s2[0] + cos_t;       ret(0,1) = beta*s3[0] - alpha*S[2];  ret(0,2) = beta*s3[2] + alpha*S[1];
     ret(1,0) = beta*s3[0] + alpha*S[2];  ret(1,1) = beta*s2[1] + cos_t;       ret(1,2) = beta*s3[1] - alpha*S[0];
     ret(2,0) = beta*s3[2] - alpha*S[1];  ret(2,1) = beta*s3[1] + alpha*S[0];  ret(2,2) = beta*s2[2] + cos_t;
-
-    return ret;
-}
-
-//// I + sin(t)*[S] + (1 - cos(t))*[S]^2,, where |S| = 1
-//SE3 ExpAngular(const Axis& S, double theta)
-//{
-//    SE3 ret = SE3::Identity();
-//    double s2[] = { S[0]*S[0], S[1]*S[1], S[2]*S[2] };
-
-//    if ( abs(s2[0] + s2[1] + s2[2] - 1.0) > LIE_EPS ) return ExpAngular(theta*S);
-
-//    double s3[] = { S[0]*S[1], S[1]*S[2], S[2]*S[0] };
-//    double alpha = sin(theta), cos_t = cos(theta), beta = 1.0 - cos_t;
-
-//    ret(0,0) = beta*s2[0] + cos_t;       ret(0,1) = beta*s3[0] - alpha*S[2];  ret(0,2) = beta*s3[2] + alpha*S[1];
-//    ret(1,0) = beta*s3[0] + alpha*S[2];  ret(1,1) = beta*s2[1] + cos_t;       ret(1,2) = beta*s3[1] - alpha*S[0];
-//    ret(2,0) = beta*s3[2] - alpha*S[1];  ret(2,1) = beta*s3[1] + alpha*S[0];  ret(2,2) = beta*s2[2] + cos_t;
-
-//    return ret;
-//}
-
-Eigen::Isometry3d ExpLinear(const Eigen::Vector3d& s)
-{
-    Eigen::Isometry3d ret = Eigen::Isometry3d::Identity();
-
-    ret(0,3) = s[0];
-    ret(1,3) = s[1];
-    ret(2,3) = s[2];
 
     return ret;
 }
@@ -1381,7 +1342,7 @@ Eigen::Vector6d dad(const Eigen::Vector6d& s, const Eigen::Vector6d& t)
     return ret;
 }
 
-Inertia Transform(const Eigen::Isometry3d& T, const Inertia& AI)
+Inertia transformInertia(const Eigen::Isometry3d& T, const Inertia& AI)
 {
     // operation count: multiplication = 186, addition = 117, subtract = 21
 
@@ -1451,42 +1412,40 @@ Inertia Transform(const Eigen::Isometry3d& T, const Inertia& AI)
     return ret;
 }
 
-bool VerifySE3(const Eigen::Isometry3d& _T)
+bool verifyRotation(const Eigen::Matrix3d& _T)
+{
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; j++)
+            if (_T(i,j) != _T(i,j))
+                return false;
+
+    if (fabs(_T.determinant() - 1.0) > DART_EPSILON)
+        return false;
+
+    return true;
+}
+
+bool verifyTransform(const Eigen::Isometry3d& _T)
 {
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 4; j++)
             if (_T(i,j) != _T(i,j))
                 return false;
 
-    if (_T(3,0) != 0.0)
-        return false;
-
-    if (_T(3,1) != 0.0)
-        return false;
-
-    if (_T(3,2) != 0.0)
-        return false;
-
-    if (_T(3,3) != 1.0)
-        return false;
-
-    if (fabs(fabs(_T.linear().determinant()) - 1.0) > 0.001)
+    if (fabs(_T.linear().determinant() - 1.0) > DART_EPSILON)
         return false;
 
     return true;
 }
 
-bool Verifyse3(const Eigen::Vector6d& _V)
+bool isNan(const Eigen::MatrixXd& _m)
 {
-    for (int i = 0; i < 6; ++i)
-        if (_V(i) != _V(i))
-            return false;
+    for (int i = 0; i < _m.rows(); ++i)
+        for (int j = 0; j < _m.cols(); ++j)
+            if (_m(i, j) != _m(i, j))
+                return true;
 
-//    for (int i = 0; i < 6; ++i)
-//        if (_V(i) > 1000.0)
-//            return false;
-
-    return true;
+    return false;
 }
 
 Eigen::Vector3d fromSkewSymmetric(const Eigen::Matrix3d& m)

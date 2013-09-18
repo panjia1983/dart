@@ -72,12 +72,12 @@ int main(int argc, char* argv[]) {
 
     // ***** BodyNode 2: Left Hip Roll (LHR) whose parent is: LHY *****\
 
-    BodyNode* parent_node = LeftLegSkel.findBodyNode("LHY");
+    BodyNode* parent_node = LeftLegSkel.getBodyNode("LHY");
     node = new BodyNode("LHR");
     joint = create1DOFJoint(parent_node, node, 0.0, 0.0, DART_PI, DOF_ROLL);
     joint->setName("LHR");
     Eigen::Isometry3d T(Eigen::Translation3d(0.0, 0.0, 0.5));
-    joint->setTransformFromParentBody(T);
+    joint->setTransformFromParentBodyNode(T);
     shape = new BoxShape(Vector3d(0.3, 0.3, 1.0));
     shape->setOffset(Vector3d(0.0, 0.0, 0.5));
     node->setLocalCOM(shape->getOffset());
@@ -87,12 +87,12 @@ int main(int argc, char* argv[]) {
     LeftLegSkel.addBodyNode(node);
 
     // ***** BodyNode 3: Left Hip Pitch (LHP) whose parent is: LHR *****
-    parent_node = LeftLegSkel.findBodyNode("LHR");
+    parent_node = LeftLegSkel.getBodyNode("LHR");
     node = new BodyNode("LHP");
     joint = create1DOFJoint(parent_node, node, 0.0, 0.0, DART_PI, DOF_ROLL);
     joint->setName("LHP");
     T = Eigen::Translation3d(0.0, 0.0, 1.0);
-    joint->setTransformFromParentBody(T);
+    joint->setTransformFromParentBodyNode(T);
     shape = new BoxShape(Vector3d(0.3, 0.3, 1.0));
     shape->setOffset(Vector3d(0.0, 0.0, 0.5));
     node->setLocalCOM(shape->getOffset());

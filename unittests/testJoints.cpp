@@ -98,11 +98,16 @@ void JOINTS::kinematicsTest(Joint* _joint)
         if (_joint->getDOF() == 0)
             return;
 
-        Eigen::Isometry3d T = _joint->getLocalTransformation();
+        Eigen::Isometry3d T = _joint->getLocalTransform();
         Eigen::Vector6d V = _joint->getLocalVelocity();
         Jacobian J = _joint->getLocalJacobian();
         Eigen::Vector6d dV = _joint->getLocalAcceleration();
         Jacobian dJ = _joint->getLocalJacobianFirstDerivative();
+
+        //--------------------------------------------------------------------------
+        // Test T
+        //--------------------------------------------------------------------------
+        EXPECT_TRUE(math::verifyTransform(T));
 
         //--------------------------------------------------------------------------
         // Test V == J * dq
@@ -131,14 +136,14 @@ void JOINTS::kinematicsTest(Joint* _joint)
             Eigen::VectorXd q_a = q;
             _joint->set_q(q_a);
             _joint->updateKinematics();
-            Eigen::Isometry3d T_a = _joint->getLocalTransformation();
+            Eigen::Isometry3d T_a = _joint->getLocalTransform();
 
             // b
             Eigen::VectorXd q_b = q;
             q_b(i) += dt;
             _joint->set_q(q_b);
             _joint->updateKinematics();
-            Eigen::Isometry3d T_b = _joint->getLocalTransformation();
+            Eigen::Isometry3d T_b = _joint->getLocalTransform();
 
             //
             Eigen::Isometry3d Tinv_a = T_a.inverse();

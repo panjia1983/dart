@@ -95,6 +95,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitY()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitX());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     EXPECT_TRUE(equals(mat1, eulerXYXToMatrix(matrixToEulerXYX(mat1))));
 
@@ -104,6 +106,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitY()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitZ());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     EXPECT_TRUE(equals(mat1, eulerXYZToMatrix(matrixToEulerXYZ(mat1))));
 
@@ -113,6 +117,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitZ()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitX());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     //EXPECT_TRUE(equals(mat1, eulerXZXToMatrix(matrixToEulerXZX(mat1))));
 
@@ -122,6 +128,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitZ()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitY());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     EXPECT_TRUE(equals(mat1, eulerXZYToMatrix(matrixToEulerXZY(mat1))));
 
@@ -131,6 +139,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitX()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitY());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     //EXPECT_TRUE(equals(mat1, eulerYXYToMatrix(matrixToEulerYXY(mat1))));
 
@@ -140,6 +150,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitX()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitZ());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     EXPECT_TRUE(equals(mat1, eulerYXZToMatrix(matrixToEulerYXZ(mat1))));
 
@@ -149,6 +161,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitZ()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitX());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     EXPECT_TRUE(equals(mat1, eulerYZXToMatrix(matrixToEulerYZX(mat1))));
 
@@ -158,6 +172,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitZ()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitY());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     //EXPECT_TRUE(equals(mat1, eulerYZYToMatrix(matrixToEulerYZY(mat1))));
 
@@ -167,6 +183,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitX()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitY());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     EXPECT_TRUE(equals(mat1, eulerZXYToMatrix(matrixToEulerZXY(mat1))));
 
@@ -176,6 +194,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitY()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitX());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     EXPECT_TRUE(equals(mat1, eulerZYXToMatrix(matrixToEulerZYX(mat1))));
 
@@ -185,6 +205,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitX()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitZ());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     //EXPECT_TRUE(equals(mat1, eulerZXZToMatrix(matrixToEulerZXZ(mat1))));
 
@@ -194,6 +216,8 @@ void testEulerAngles(const Eigen::Vector3d& angle)
            Eigen::AngleAxisd(angle(1), Eigen::Vector3d::UnitY()) *
            Eigen::AngleAxisd(angle(2), Eigen::Vector3d::UnitZ());
 
+    EXPECT_TRUE(math::verifyRotation(mat1));
+    EXPECT_TRUE(math::verifyRotation(mat2));
     EXPECT_TRUE(equals(mat1, mat2));
     //EXPECT_TRUE(equals(mat1, eulerZYZToMatrix(matrixToEulerZYZ(mat1))));
 }
@@ -222,7 +246,7 @@ TEST(LIE_GROUP_OPERATORS, EXPONENTIAL_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d s = Eigen::Vector6d::Random();
-        Eigen::Isometry3d Exp_s = math::Exp(s);
+        Eigen::Isometry3d Exp_s = math::expMap(s);
         Eigen::Matrix4d Exp_s_2 = Eigen::Matrix4d::Identity();
 
         double theta = s.head<3>().norm();
@@ -256,7 +280,7 @@ TEST(LIE_GROUP_OPERATORS, EXPONENTIAL_MAPPINGS)
     {
         Eigen::Vector6d s = Eigen::Vector6d::Random();
         s.tail<3>() = Eigen::Vector3d::Zero();
-        Eigen::Isometry3d Exp_s = math::ExpAngular(s.head<3>());
+        Eigen::Isometry3d Exp_s = math::expAngular(s.head<3>());
         Eigen::Matrix4d Exp_s_2 = Eigen::Matrix4d::Identity();
 
         double theta = s.head<3>().norm();
@@ -290,7 +314,7 @@ TEST(LIE_GROUP_OPERATORS, EXPONENTIAL_MAPPINGS)
     {
         Eigen::Vector6d s = Eigen::Vector6d::Random();
         s.head<3>() = Eigen::Vector3d::Zero();
-        Eigen::Isometry3d Exp_s = math::ExpLinear(s.tail<3>());
+        Eigen::Isometry3d Exp_s(Eigen::Translation3d(s.tail<3>()));
         Eigen::Matrix4d Exp_s_2 = Eigen::Matrix4d::Identity();
 
         double theta = s.head<3>().norm();
@@ -329,7 +353,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Vector6d V = Eigen::Vector6d::Random();
 
         Eigen::Vector6d AdTV = AdT(T, V);
@@ -355,7 +379,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Isometry3d R = Eigen::Isometry3d::Identity();
         R = T.linear();
         Eigen::Vector6d V = Eigen::Vector6d::Random();
@@ -371,7 +395,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Vector3d w = Eigen::Vector3d::Random();
         Eigen::Vector6d V = Eigen::Vector6d::Zero();
         V.head<3>() = w;
@@ -387,7 +411,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Vector3d v = Eigen::Vector3d::Random();
         Eigen::Vector6d V = Eigen::Vector6d::Zero();
         V.tail<3>() = v;
@@ -403,7 +427,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Vector3d v = Eigen::Vector3d::Random();
         Eigen::Vector6d V = Eigen::Vector6d::Zero();
         V.tail<3>() = v;
@@ -419,7 +443,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Isometry3d InvT = T.inverse();
         Eigen::Vector6d V = Eigen::Vector6d::Random();
 
@@ -434,7 +458,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Vector3d v = Eigen::Vector3d::Random();
         Eigen::Vector6d V = Eigen::Vector6d::Zero();
         V.tail<3>() = v;
@@ -452,7 +476,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Vector6d F = Eigen::Vector6d::Random();
 
         Eigen::Vector6d dAdTF = dAdT(T, F);
@@ -471,7 +495,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Isometry3d InvT = T.inverse();
         Eigen::Vector6d F = Eigen::Vector6d::Random();
 
@@ -497,7 +521,7 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
     for (int i = 0; i < numTest; ++i)
     {
         Eigen::Vector6d t = Eigen::Vector6d::Random();
-        Eigen::Isometry3d T = math::Exp(t);
+        Eigen::Isometry3d T = math::expMap(t);
         Eigen::Isometry3d InvT = T.inverse();
         Eigen::Isometry3d InvR = Eigen::Isometry3d::Identity();
         InvR = InvT.linear();

@@ -58,28 +58,32 @@ enum RotationOrder
     UNKNOWN, XYZ, XZY, YZX, YXZ, ZXY, ZYX
 };
 
+/// @brief
 Eigen::Matrix3d makeSkewSymmetric(const Eigen::Vector3d& v);
+
+/// @brief
 Eigen::Vector3d fromSkewSymmetric(const Eigen::Matrix3d& m);
 
 //------------------------------------------------------------------------------
-Eigen::Quaterniond matrixToQuat(Eigen::Matrix3d& m);	// forms the Quaterniond from a rotation matrix
-Eigen::Matrix3d quatToMatrix(Eigen::Quaterniond& q);
-
+/// @brief
 Eigen::Quaterniond expToQuat(Eigen::Vector3d& v);
+
+/// @brief
 Eigen::Vector3d quatToExp(Eigen::Quaterniond& q);
 
-Eigen::Vector3d rotatePoint(const Eigen::Quaterniond& q, const Eigen::Vector3d& pt);
-Eigen::Vector3d rotatePoint(const Eigen::Quaterniond& q, double x, double y, double z);
+/// @brief
+Eigen::Vector3d rotatePoint(const Eigen::Quaterniond& q,
+                            const Eigen::Vector3d& pt);
 
-// quaternion stuff
+/// @brief
+Eigen::Vector3d rotatePoint(const Eigen::Quaterniond& q,
+                            double x, double y, double z);
+
+/// @brief
 Eigen::Matrix3d quatDeriv(const Eigen::Quaterniond& q, int el);
-Eigen::Matrix3d quatSecondDeriv(const Eigen::Quaterniond& q, int el1, int el2);
 
-// compute expmap stuff
-Eigen::Matrix3d expMapRot(const Eigen::Vector3d &_expmap); ///< computes the Rotation matrix from a given expmap vector
-Eigen::Matrix3d expMapJac(const Eigen::Vector3d &_expmap);  ///< computes the Jacobian of the expmap
-Eigen::Matrix3d expMapJacDot(const Eigen::Vector3d &_expmap, const Eigen::Vector3d &_qdot); ///< computes the time derivative of the expmap Jacobian
-Eigen::Matrix3d expMapJacDeriv(const Eigen::Vector3d &_expmap, int _qi);    ///< computes the derivative of the Jacobian of the expmap wrt to _qi indexed dof; _qi \in {0,1,2}
+/// @brief
+Eigen::Matrix3d quatSecondDeriv(const Eigen::Quaterniond& q, int el1, int el2);
 
 //------------------------------------------------------------------------------
 /// @brief Get a transformation matrix given by the Euler XYX angle.
@@ -158,28 +162,36 @@ Eigen::Vector3d matrixToEulerZYX(const Eigen::Matrix3d& R);
 //Eigen::Vector3d matrixToEulerZYZ(const Eigen::Matrix3d& R);
 
 //------------------------------------------------------------------------------
-///// @brief reparameterize such as ||s'|| < M_PI and Exp(s) == Epx(s')
-//Axis Reparameterize(const Axis& s);
-
 /// @brief Exponential mapping
-Eigen::Isometry3d Exp(const Eigen::Vector6d& s);
+Eigen::Isometry3d expMap(const Eigen::Vector6d& s);
 
 /// @brief fast version of Exp(se3(s, 0))
-Eigen::Isometry3d ExpAngular(const Eigen::Vector3d& s);
+/// @todo This expAngular() can be replaced by Eigen::AngleAxis() but we need
+/// to verify that they have exactly same functionality.
+/// See: https://github.com/dartsim/dart/issues/88
+Eigen::Isometry3d expAngular(const Eigen::Vector3d& s);
 
-///// @brief fast version of Exp(t * s), when |s| = 1
-//SE3 ExpAngular(const Axis& s, double t);
+/// @brief Computes the Rotation matrix from a given expmap vector.
+Eigen::Matrix3d expMapRot(const Eigen::Vector3d& _expmap);
 
-/// @brief fast version of Exp(se3(s, 0))
-Eigen::Isometry3d ExpLinear(const Eigen::Vector3d& s);
+/// @brief Computes the Jacobian of the expmap
+Eigen::Matrix3d expMapJac(const Eigen::Vector3d& _expmap);
+
+/// @brief Computes the time derivative of the expmap Jacobian.
+Eigen::Matrix3d expMapJacDot(const Eigen::Vector3d& _expmap,
+                             const Eigen::Vector3d& _qdot);
+
+/// @brief computes the derivative of the Jacobian of the expmap wrt to _qi
+/// indexed dof; _qi \in {0,1,2}
+Eigen::Matrix3d expMapJacDeriv(const Eigen::Vector3d& _expmap, int _qi);
 
 /// @brief Log mapping
 /// @note When @f$|Log(R)| = @pi@f$, Exp(LogR(R) = Exp(-Log(R)).
 /// The implementation returns only the positive one.
-Eigen::Vector3d Log(const Eigen::Matrix3d& R);
+Eigen::Vector3d logMap(const Eigen::Matrix3d& R);
 
 /// @brief Log mapping
-Eigen::Vector6d Log(const Eigen::Isometry3d& T);
+Eigen::Vector6d logMap(const Eigen::Isometry3d& T);
 
 //------------------------------------------------------------------------------
 ///// @brief Rectify the rotation part so as that it satifies the orthogonality
@@ -189,6 +201,9 @@ Eigen::Vector6d Log(const Eigen::Isometry3d& T);
 ///// Hence by calling this function iterativley, you can make the rotation part
 ///// closer to SO(3).
 //SE3 Normalize(const SE3& T);
+
+///// @brief reparameterize such as ||s'|| < M_PI and Exp(s) == Epx(s')
+//Axis Reparameterize(const Axis& s);
 
 //------------------------------------------------------------------------------
 /// @brief adjoint mapping
@@ -227,10 +242,12 @@ Eigen::Vector6d AdInvT(const Eigen::Isometry3d& T, const Eigen::Vector6d& V);
 //se3 AdInvR(const SE3& T, const se3& V);
 
 /// @brief Fast version of Ad(Inv([R 0; 0 1]), se3(0, v))
-Eigen::Vector6d AdInvRLinear(const Eigen::Isometry3d& T, const Eigen::Vector3d& V);
+Eigen::Vector6d AdInvRLinear(const Eigen::Isometry3d& T,
+                             const Eigen::Vector3d& V);
 
 /// @brief dual adjoint mapping
-/// @note @f$Ad^{@,*}_TF = ( R^T (m - p@times f)@,,~ R^T f)@f$, where @f$T=(R,p)@in SE(3), F=(m,f)@in se(3)^*@f$.
+/// @note @f$Ad^{@,*}_TF = ( R^T (m - p@times f)@,,~ R^T f)@f$,
+/// where @f$T=(R,p)@in SE(3), F=(m,f)@in se(3)^*@f$.
 Eigen::Vector6d dAdT(const Eigen::Isometry3d& T, const Eigen::Vector6d& F);
 
 ///// @brief fast version of Ad(Inv(T), dse3(Eigen_Vec3(0), F))
@@ -262,13 +279,18 @@ Eigen::Vector6d ad(const Eigen::Vector6d& X, const Eigen::Vector6d& Y);
 Eigen::Vector6d dad(const Eigen::Vector6d& V, const Eigen::Vector6d& F);
 
 /// @brief
-Inertia Transform(const Eigen::Isometry3d& T, const Inertia& AI);
+Inertia transformInertia(const Eigen::Isometry3d& T, const Inertia& AI);
+
+/// @brief Check if determinant of _R is equat to 1 and all the elements are not
+/// NaN values.
+bool verifyRotation(const Eigen::Matrix3d& _R);
+
+/// @brief Check if determinant of the rotational part of _T is equat to 1 and
+/// all the elements are not NaN values.
+bool verifyTransform(const Eigen::Isometry3d& _T);
 
 /// @brief
-bool VerifySE3(const Eigen::Isometry3d& _T);
-
-/// @brief
-bool Verifyse3(const Eigen::Vector6d& _V);
+bool isNan(const Eigen::MatrixXd& _m);
 
 } // namespace math
 } // namespace dart

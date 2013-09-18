@@ -66,6 +66,13 @@ BodyNode::BodyNode(const std::string& _name)
       mChildBodyNodes(std::vector<BodyNode*>(0)),
       mGravityMode(true),
       mCenterOfMass(Eigen::Vector3d::Zero()),
+      mMass(1.0),
+      mIxx(1.0),
+      mIyy(1.0),
+      mIzz(1.0),
+      mIxy(0.0),
+      mIxz(0.0),
+      mIyz(0.0),
       mI(Eigen::Matrix6d::Identity()),
       mW(Eigen::Isometry3d::Identity()),
       mV(Eigen::Vector6d::Zero()),
@@ -165,7 +172,7 @@ BodyNode*BodyNode::getParentBodyNode() const
     return mParentBodyNode;
 }
 
-void BodyNode::addChildBody(BodyNode* _body)
+void BodyNode::addChildBodyNode(BodyNode* _body)
 {
     assert(_body != NULL);
 
@@ -212,7 +219,7 @@ void BodyNode::setDependDofList()
 
     for (int i = 0; i < getNumLocalDofs(); i++)
     {
-        int dofID = getLocalGenCoord(i)->getSkelIndex();
+        int dofID = getLocalGenCoord(i)->getSkeletonIndex();
         mDependentDofIndexes.push_back(dofID);
     }
 
@@ -268,9 +275,19 @@ int BodyNode::getDependentDof(int _arrayIndex) const
 
 void BodyNode::setWorldTransform(const Eigen::Isometry3d &_W)
 {
-    assert(math::VerifySE3(_W));
+    assert(math::verifyTransform(_W));
 
     mW = _W;
+}
+
+const Eigen::Isometry3d& BodyNode::getWorldTransform() const
+{
+    return mW;
+}
+
+Eigen::Isometry3d BodyNode::getWorldInvTransform() const
+{
+    return mW.inverse();
 }
 
 Eigen::Vector3d BodyNode::evalWorldPos(const Eigen::Vector3d& _lp) const
@@ -278,70 +295,79 @@ Eigen::Vector3d BodyNode::evalWorldPos(const Eigen::Vector3d& _lp) const
     return mW * _lp;
 }
 
-Eigen::Vector6d BodyNode::getVelocityWorld() const
+const Eigen::Vector6d& BodyNode::getBodyVelocity() const
+{
+    return mV;
+}
+
+Eigen::Vector6d BodyNode::getWorldVelocity() const
 {
     return math::AdR(mW, mV);
 }
 
-Eigen::Vector6d BodyNode::getVelocityWorldAtCOG() const
+Eigen::Vector6d BodyNode::getWorldVelocityAtCOM() const
 {
     Eigen::Isometry3d worldFrameAtCOG = mW;
     worldFrameAtCOG.translation() = mW.linear() * -mCenterOfMass;
     return math::AdT(worldFrameAtCOG, mV);
 }
 
-Eigen::Vector6d BodyNode::getVelocityWorldAtPoint(const Eigen::Vector3d& _pointBody) const
+Eigen::Vector6d BodyNode::getWorldVelocityAtPoint(const Eigen::Vector3d& _pointBody) const
 {
     Eigen::Isometry3d worldFrameAtPoint = mW;
     worldFrameAtPoint.translation() = mW.linear() *  -_pointBody;
     return math::AdT(worldFrameAtPoint, mV);
 }
 
-Eigen::Vector6d BodyNode::getVelocityWorldAtFrame(const Eigen::Isometry3d& _T) const
+Eigen::Vector6d BodyNode::getWorldVelocityAtFrame(const Eigen::Isometry3d& _T) const
 {
-    assert(math::VerifySE3(_T));
+    assert(math::verifyTransform(_T));
 
     return math::AdT(_T.inverse() * mW, mV);
 }
 
-Eigen::Vector6d BodyNode::getAccelerationWorld() const
+const Eigen::Vector6d&BodyNode::getBodyAcceleration() const
+{
+    return mdV;
+}
+
+Eigen::Vector6d BodyNode::getWorldAcceleration() const
 {
     return math::AdR(mW, mdV);
 }
 
-Eigen::Vector6d BodyNode::getAccelerationWorldAtCOG() const
+Eigen::Vector6d BodyNode::getWorldAccelerationAtCOM() const
 {
     Eigen::Isometry3d worldFrameAtCOG = mW;
     worldFrameAtCOG.translation() = mW.linear() * -mCenterOfMass;
     return math::AdT(worldFrameAtCOG, mdV);
 }
 
-Eigen::Vector6d BodyNode::getAccelerationWorldAtPoint(const Eigen::Vector3d& _pointBody) const
+Eigen::Vector6d BodyNode::getWorldAccelerationAtPoint(const Eigen::Vector3d& _point) const
 {
     Eigen::Isometry3d worldFrameAtPoint = mW;
-    worldFrameAtPoint.translation() = mW.linear() * _pointBody;
+    worldFrameAtPoint.translation() = mW.linear() * _point;
     return math::AdT(worldFrameAtPoint, mdV);
 }
 
-Eigen::Vector6d BodyNode::getAccelerationWorldAtFrame(const Eigen::Isometry3d& _T) const
+Eigen::Vector6d BodyNode::getWorldAccelerationAtFrame(const Eigen::Isometry3d& _T) const
 {
-    assert(math::VerifySE3(_T));
+    assert(math::verifyTransform(_T));
 
     return math::AdT(_T.inverse() * mW, mdV);
 }
 
-const math::Jacobian&BodyNode::getJacobianBody() const
+const math::Jacobian&BodyNode::getBodyJacobian() const
 {
     return mBodyJacobian;
 }
 
-math::Jacobian BodyNode::getJacobianWorld() const
+math::Jacobian BodyNode::getWorldJacobian() const
 {
     return math::AdR(mW, mBodyJacobian);
 }
 
-math::Jacobian BodyNode::getJacobianWorldAtPoint(
-        const Eigen::Vector3d& r_world) const
+math::Jacobian BodyNode::getWorldJacobianAtPoint(const Eigen::Vector3d& _point) const
 {
     //--------------------------------------------------------------------------
     // Jb                : body jacobian
@@ -357,10 +383,10 @@ math::Jacobian BodyNode::getJacobianWorldAtPoint(
     //
     // body_jacobian_at_contact_point = Ad(X^{-1} * W, Jb)
     //--------------------------------------------------------------------------
-    return math::AdTJac(math::ExpLinear(-r_world) * mW, mBodyJacobian);
+    return math::AdTJac(Eigen::Translation3d(-_point) * mW, mBodyJacobian);
 }
 
-Eigen::MatrixXd BodyNode::getJacobianWorldAtPoint_LinearPartOnly(
+Eigen::MatrixXd BodyNode::getWorldJacobianAtPoint_LinearPartOnly(
         const Eigen::Vector3d& r_world) const
 {
     //--------------------------------------------------------------------------
@@ -381,12 +407,12 @@ Eigen::MatrixXd BodyNode::getJacobianWorldAtPoint_LinearPartOnly(
     // TODO: Speed up here.
     Eigen::MatrixXd JcLinear = Eigen::MatrixXd::Zero(3, getNumDependentDofs());
 
-    JcLinear = getJacobianWorldAtPoint(r_world).bottomLeftCorner(3,getNumDependentDofs());
+    JcLinear = getWorldJacobianAtPoint(r_world).bottomLeftCorner(3,getNumDependentDofs());
 
     return JcLinear;
 }
 
-const math::Jacobian& BodyNode::getJacobianDeriv() const
+const math::Jacobian& BodyNode::getBodyJacobianDeriv() const
 {
     return mBodyJacobianDeriv;
 }
@@ -465,19 +491,19 @@ void BodyNode::drawMarkers(renderer::RenderInterface* _ri,
     _ri->popMatrix();
 }
 
-void BodyNode::updateTransformation()
+void BodyNode::updateTransform()
 {
     if (mParentBodyNode)
     {
         mW = mParentBodyNode->getWorldTransform()
-             * mParentJoint->getLocalTransformation();
+             * mParentJoint->getLocalTransform();
     }
     else
     {
-        mW = mParentJoint->getLocalTransformation();
+        mW = mParentJoint->getLocalTransform();
     }
 
-    assert(math::VerifySE3(mW));
+    assert(math::verifyTransform(mW));
 }
 
 void BodyNode::updateVelocity(bool _updateJacobian)
@@ -490,8 +516,8 @@ void BodyNode::updateVelocity(bool _updateJacobian)
 
     if (mParentBodyNode)
     {
-        mV = math::AdInvT(mParentJoint->getLocalTransformation(),
-                          mParentBodyNode->getVelocityBody()) +
+        mV = math::AdInvT(mParentJoint->getLocalTransform(),
+                          mParentBodyNode->getBodyVelocity()) +
                 mParentJoint->getLocalVelocity();
     }
     else
@@ -499,7 +525,7 @@ void BodyNode::updateVelocity(bool _updateJacobian)
         mV = mParentJoint->getLocalVelocity();
     }
 
-    assert(math::Verifyse3(mV));
+    assert(!math::isNan(mV));
 
     if (_updateJacobian == false)
         return;
@@ -529,7 +555,7 @@ void BodyNode::updateVelocity(bool _updateJacobian)
         {
             assert(mParentJoint);
             mBodyJacobian.col(i) = math::AdInvT(
-                                       mParentJoint->getLocalTransformation(),
+                                       mParentJoint->getLocalTransform(),
                                        mParentBodyNode->mBodyJacobian.col(i));
         }
     }
@@ -549,7 +575,7 @@ void BodyNode::updateEta()
         mEta = math::ad(mV, mParentJoint->mS*mParentJoint->get_dq()) +
            mParentJoint->mdS*mParentJoint->get_dq();
 
-        assert(math::Verifyse3(mEta));
+        assert(!math::isNan(mEta));
     }
 }
 
@@ -566,8 +592,8 @@ void BodyNode::updateAcceleration(bool _updateJacobianDeriv)
     {
         if (mParentBodyNode)
         {
-            mdV = math::AdInvT(mParentJoint->getLocalTransformation(),
-                               mParentBodyNode->getAcceleration()) +
+            mdV = math::AdInvT(mParentJoint->getLocalTransform(),
+                               mParentBodyNode->getBodyAcceleration()) +
                   mEta + mParentJoint->mS*mParentJoint->get_ddq();
         }
         else
@@ -576,7 +602,7 @@ void BodyNode::updateAcceleration(bool _updateJacobianDeriv)
         }
     }
 
-    assert(math::Verifyse3(mdV));
+    assert(!math::isNan(mdV));
 
     if (_updateJacobianDeriv == false)
         return;
@@ -605,7 +631,7 @@ void BodyNode::updateAcceleration(bool _updateJacobianDeriv)
         for (int i = 0; i < numParentDOFs; ++i)
         {
             assert(mParentJoint);
-            Eigen::Vector6d dJi = math::AdInvT(mParentJoint->getLocalTransformation(),
+            Eigen::Vector6d dJi = math::AdInvT(mParentJoint->getLocalTransform(),
                                          mParentBodyNode->mBodyJacobianDeriv.col(i));
             mBodyJacobianDeriv.col(i) = dJi;
         }
@@ -619,16 +645,12 @@ void BodyNode::updateAcceleration(bool _updateJacobianDeriv)
     }
 }
 
-void BodyNode::setMomentOfInertia(double _Ixx, double _Iyy, double _Izz,
-                                  double _Ixy, double _Ixz, double _Iyz)
+void BodyNode::setInertia(double _Ixx, double _Iyy, double _Izz,
+                          double _Ixy, double _Ixz, double _Iyz)
 {
     assert(_Ixx >= 0.0);
     assert(_Iyy >= 0.0);
     assert(_Izz >= 0.0);
-
-    assert(_Ixy >= 0.0);
-    assert(_Ixz >= 0.0);
-    assert(_Iyz >= 0.0);
 
     mIxx = _Ixx;
     mIyy = _Iyy;
@@ -658,17 +680,17 @@ Eigen::Vector3d BodyNode::getWorldCOM() const
     return evalWorldPos(mCenterOfMass);
 }
 
-Eigen::Matrix6d BodyNode::getGeneralizedInertia() const
+Eigen::Matrix6d BodyNode::getInertia() const
 {
     return mI;
 }
 
-void BodyNode::setSkelIndex(int _idx)
+void BodyNode::setSkeletonIndex(int _idx)
 {
     mSkelIndex = _idx;
 }
 
-int BodyNode::getSkelIndex() const
+int BodyNode::getSkeletonIndex() const
 {
     return mSkelIndex;
 }
@@ -786,8 +808,7 @@ const Eigen::Vector6d& BodyNode::getExternalForceLocal() const
 
 Eigen::Vector6d BodyNode::getExternalForceGlobal() const
 {
-    //return math::dAdInvT(mW, mFext);
-    return Eigen::Vector6d();
+    return math::dAdInvT(mW, mFext);
 }
 
 const Eigen::Vector6d&BodyNode::getBodyForce() const
@@ -835,11 +856,11 @@ void BodyNode::updateBodyForce(const Eigen::Vector3d& _gravity,
         BodyNode* bodyDyn = dynamic_cast<BodyNode*>(*iChildBody);
         assert(bodyDyn != NULL);
 
-        mF += math::dAdInvT(childJoint->getLocalTransformation(),
+        mF += math::dAdInvT(childJoint->getLocalTransform(),
                             bodyDyn->getBodyForce());
     }
 
-    assert(math::Verifyse3(mF));
+    assert(!math::isNan(mF));
 }
 
 void BodyNode::updateGeneralizedForce(bool _withDampingForces)
@@ -861,8 +882,8 @@ void BodyNode::updateArticulatedInertia()
     std::vector<Joint*>::iterator iJoint;
     for (iJoint = mChildJoints.begin(); iJoint != mChildJoints.end(); ++iJoint)
     {
-        mAI += math::Transform(
-                    (*iJoint)->getLocalTransformation().inverse(),
+        mAI += math::transformInertia(
+                    (*iJoint)->getLocalTransform().inverse(),
                     (*iJoint)->getChildBodyNode()->mPi);
     }
 }
@@ -878,10 +899,10 @@ void BodyNode::updateBiasForce(const Eigen::Vector3d& _gravity)
 
     std::vector<Joint*>::iterator iJoint;
     for (iJoint = mChildJoints.begin(); iJoint != mChildJoints.end(); ++iJoint)
-        mB += math::dAdInvT((*iJoint)->getLocalTransformation(),
+        mB += math::dAdInvT((*iJoint)->getLocalTransform(),
                             (*iJoint)->getChildBodyNode()->mBeta);
 
-    assert(math::Verifyse3(mB));
+    assert(!math::isNan(mB));
 }
 
 void BodyNode::updatePsi()
@@ -913,7 +934,7 @@ void BodyNode::updateBeta()
         mAlpha          += mParentJoint->getDampingForces();
         Eigen::VectorXd Fc = Eigen::VectorXd::Zero(mParentJoint->getDOF());
         for (int i = 0; i < mParentJoint->getDOF(); i++)
-            Fc(i) = mSkeleton->getConstraintForces()[(mParentJoint->getGenCoords()[i])->getSkelIndex()];
+            Fc(i) = mSkeleton->getConstraintForces()[(mParentJoint->getGenCoords()[i])->getSkeletonIndex()];
         mAlpha          += Fc;
     }
 
@@ -924,7 +945,7 @@ void BodyNode::updateBeta()
     else
         mBeta += mAI*mEta;
 
-    assert(math::Verifyse3(mBeta));
+    assert(!math::isNan(mBeta));
 }
 
 void BodyNode::update_ddq()
@@ -935,8 +956,8 @@ void BodyNode::update_ddq()
         ddq.noalias() = mPsi*
                         (mAlpha -
                          mParentJoint->mS.transpose()*mAI*
-                         math::AdInvT(mParentJoint->getLocalTransformation(),
-                                      mParentBodyNode->getAcceleration())
+                         math::AdInvT(mParentJoint->getLocalTransform(),
+                                      mParentBodyNode->getBodyAcceleration())
                          );
     }
     else
@@ -952,7 +973,7 @@ void BodyNode::update_F_fs()
     mF.noalias() = mAI*mdV;
     mF          += mB;
 
-    assert(math::Verifyse3(mF));
+    assert(!math::isNan(mF));
 }
 
 void BodyNode::updateDampingForce()
