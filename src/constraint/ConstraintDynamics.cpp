@@ -16,6 +16,9 @@ using namespace math;
 
 #define EPSILON 0.000001
 
+static dart::common::Timer tCollisionChecking("collision checking");
+static dart::common::Timer tSolveAndFillMatrix("solve");
+
 namespace dart {
 namespace constraint {
 
@@ -37,10 +40,13 @@ void ConstraintDynamics::reset() {
 void ConstraintDynamics::computeConstraintForces() {
     //            static Timer t1("t1");
 
+
     if (getTotalNumDofs() == 0)
         return;
     mCollisionChecker->clearAllContacts();
+    tCollisionChecking.start();
     mCollisionChecker->checkCollision(true, true);
+    tCollisionChecking.stop();
 
     //            t1.startTimer();
     mLimitingDofIndex.clear();
@@ -72,6 +78,7 @@ void ConstraintDynamics::computeConstraintForces() {
         }
     }
 
+    static int maxContact = 0;
     if (mCollisionChecker->getNumContacts() == 0 && mLimitingDofIndex.size() == 0) {
         for (int i = 0; i < mSkels.size(); i++)
             mContactForces[i].setZero();
@@ -82,13 +89,23 @@ void ConstraintDynamics::computeConstraintForces() {
             computeConstraintWithoutContact();
         }
     } else {
+        if (maxContact < mCollisionChecker->getNumContacts())
+        {
+            maxContact = mCollisionChecker->getNumContacts();
+            std::cout << "MAX: " << maxContact << std::endl;
+        }
+
         if (mUseODELCPSolver) {
+            tSolveAndFillMatrix.start();
             fillMatricesODE();
             solve();
+            tSolveAndFillMatrix.stop();
             applySolutionODE();
         } else {
+            tSolveAndFillMatrix.start();
             fillMatrices();
             solve();
+            tSolveAndFillMatrix.stop();
             applySolution();            
         }
     }

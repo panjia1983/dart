@@ -18,7 +18,9 @@ void MyWindow::timeStepping()
     //mForce /= 2.0;
 
     if (mWorld->getTime() > 1.0)
+    {
         exit(0);
+    }
 }
 
 void MyWindow::keyboard(unsigned char key, int x, int y)

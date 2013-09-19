@@ -1,5 +1,6 @@
 #include "utils/Paths.h"
 #include "utils/SkelParser.h"
+#include "common/Timer.h"
 #include "MyWindow.h"
 
 int main(int argc, char* argv[])

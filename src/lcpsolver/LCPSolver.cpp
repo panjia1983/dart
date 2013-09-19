@@ -3,9 +3,12 @@
 #include <cstdio>
 #include "lcp.h"
 #include "misc.h"
+#include "common/Timer.h"
 
 namespace dart {
 namespace lcpsolver {
+
+static dart::common::Timer tSolveLCP("dSolveLCP");
 
 LCPSolver::LCPSolver()
 {
@@ -66,7 +69,9 @@ bool LCPSolver::Solve(const Eigen::MatrixXd& _A, const Eigen::VectorXd& _b, Eige
 
         }
         //		dClearUpperTriangle (A,n);
+        tSolveLCP.start();
         dSolveLCP (n, A, x, b, w, 0, lo, hi, findex);
+        tSolveLCP.stop();
         /*
                   for (int i = 0; i < n; i++) {
                   if (w[i] < 0.0 && abs(x[i] - hi[i]) > 0.000001)
