@@ -74,7 +74,7 @@ FCLMESHCollisionNode::FCLMESHCollisionNode(dynamics::BodyNode* _bodyNode)
                 if (ellipsoid->isSphere())
                 {
                     fcl::BVHModel<fcl::OBBRSS>* mesh = new fcl::BVHModel<fcl::OBBRSS>;
-                    fcl::generateBVHModel<fcl::OBBRSS>(*mesh, fcl::Sphere(shape->getDim()[0]*0.5), shapeTransform, 10, 10);
+                    fcl::generateBVHModel<fcl::OBBRSS>(*mesh, fcl::Sphere(shape->getDim()[0]*0.5), shapeTransform, 8, 8);
                     mMeshes.push_back(mesh);
                 }
                 else {
@@ -91,7 +91,7 @@ FCLMESHCollisionNode::FCLMESHCollisionNode(dynamics::BodyNode* _bodyNode)
                 if(cylinder) {
                     double radius = cylinder->getRadius();
                     double height = cylinder->getHeight();
-                    mMeshes.push_back(createCylinder<fcl::OBBRSS>(radius, radius, height, 16, 16, shapeTransform));
+                    mMeshes.push_back(createCylinder<fcl::OBBRSS>(radius, radius, height, 8, 1, shapeTransform));
                 }
                 break;
             }
