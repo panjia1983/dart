@@ -16,6 +16,9 @@ void MyWindow::timeStepping()
     //static_cast<BodyNode*>(mWorld->getSkeleton(1)->getNode(0))->addExtForce(Vector3d(0.0, 0.0, 0.0), mForce);
     mWorld->step();
     //mForce /= 2.0;
+
+    if (mWorld->getTime() > 1.0)
+        exit(0);
 }
 
 void MyWindow::keyboard(unsigned char key, int x, int y)
