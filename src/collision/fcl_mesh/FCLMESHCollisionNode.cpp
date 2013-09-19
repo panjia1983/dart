@@ -225,11 +225,51 @@ bool FCLMESHCollisionNode::checkCollision(
             }
         }
 
+        //----------------------------------------------------------------------
+        // TEMP:
+        //----------------------------------------------------------------------
+        std::vector<Contact> filteredContactPoints;
         for (unsigned int k = 0; k < unfilteredContactPoints.size(); k++) {
             if(!markForDeletion[k]) {
-                _contactPoints->push_back(unfilteredContactPoints[k]);
+                filteredContactPoints.push_back(unfilteredContactPoints[k]);
             }
         }
+
+        if (filteredContactPoints.size() == 0)
+            continue;
+
+        int numCollide;
+        int maxCollide = 6;
+        std::vector<int> index(maxCollide);
+        for (int k = 0; k < maxCollide; k++) {
+            index[k] = k;
+        }
+
+        if (filteredContactPoints.size() > maxCollide) {
+            double maxPenDepth = filteredContactPoints[maxCollide - 1].penetrationDepth;
+            for (int k = maxCollide; k < filteredContactPoints.size(); k++) {
+                if (filteredContactPoints[k].penetrationDepth > maxPenDepth) {
+                    maxPenDepth = filteredContactPoints[k].penetrationDepth;
+                    index[maxCollide - 1] = k;
+                }
+            }
+            numCollide = maxCollide;
+        } else {
+            numCollide = filteredContactPoints.size();
+        }
+
+
+        for (int k = 0; k < numCollide; k++) {
+            _contactPoints->push_back(filteredContactPoints[index[k]]);
+        }
+
+        //----------------------------------------------------------------------
+//        for (unsigned int k = 0; k < unfilteredContactPoints.size(); k++) {
+//            if(!markForDeletion[k]) {
+//                _contactPoints->push_back(unfilteredContactPoints[k]);
+//            }
+//        }
+        //----------------------------------------------------------------------
     }
 
     return collision;
