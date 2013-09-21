@@ -61,7 +61,6 @@ BodyNode::BodyNode(const std::string& _name)
       mColliding(false),
       mSkeleton(NULL),
       mParentJoint(NULL),
-      mChildJoints(std::vector<Joint*>(0)),
       mParentBodyNode(NULL),
       mChildBodyNodes(std::vector<BodyNode*>(0)),
       mGravityMode(true),
@@ -138,35 +137,6 @@ double BodyNode::getMass() const
     return mMass;
 }
 
-void BodyNode::addChildJoint(Joint* _joint)
-{
-    assert(_joint != NULL);
-
-    mChildJoints.push_back(_joint);
-}
-
-Joint*BodyNode::getChildJoint(int _idx) const
-{
-    assert(0 <= _idx && _idx < mChildJoints.size());
-
-    return mChildJoints[_idx];
-}
-
-const std::vector<Joint*>&BodyNode::getChildJoints() const
-{
-    return mChildJoints;
-}
-
-int BodyNode::getNumChildJoints() const
-{
-    return mChildJoints.size();
-}
-
-void BodyNode::setParentBodyNode(BodyNode* _body)
-{
-    mParentBodyNode = _body;
-}
-
 BodyNode*BodyNode::getParentBodyNode() const
 {
     return mParentBodyNode;
@@ -177,6 +147,7 @@ void BodyNode::addChildBodyNode(BodyNode* _body)
     assert(_body != NULL);
 
     mChildBodyNodes.push_back(_body);
+    _body->mParentBodyNode = this;
 }
 
 BodyNode* BodyNode::getChildBodyNode(int _idx) const
@@ -186,9 +157,9 @@ BodyNode* BodyNode::getChildBodyNode(int _idx) const
     return mChildBodyNodes[_idx];
 }
 
-const std::vector<BodyNode*>&BodyNode::getChildBodies() const
+int BodyNode::getNumChildBodyNodes() const
 {
-    return mChildBodyNodes;
+    return mChildBodyNodes.size();
 }
 
 void BodyNode::addMarker(Marker* _h)
@@ -217,14 +188,14 @@ void BodyNode::setDependDofList()
                               mParentBodyNode->mDependentDofIndexes.end());
     }
 
-    for (int i = 0; i < getNumLocalDofs(); i++)
+    for (int i = 0; i < mParentJoint->getNumGenCoords(); i++)
     {
-        int dofID = getLocalGenCoord(i)->getSkeletonIndex();
+        int dofID = mParentJoint->getGenCoord(i)->getSkeletonIndex();
         mDependentDofIndexes.push_back(dofID);
     }
 
 #ifndef NDEBUG
-    for (int i = 0; i < mDependentDofIndexes.size() - 1; i++)
+    for (int i = 0; i < (int)mDependentDofIndexes.size() - 1; i++)
     {
         for (int j = i + 1; j < mDependentDofIndexes.size(); j++)
             if (mDependentDofIndexes[i] == mDependentDofIndexes[j])
@@ -243,29 +214,9 @@ bool BodyNode::dependsOn(int _dofIndex) const
                          _dofIndex);
 }
 
-int BodyNode::getNumLocalDofs() const
-{
-    return mParentJoint->getDOF();
-}
-
-GenCoord* BodyNode::getLocalGenCoord(int _idx) const
-{
-    return mParentJoint->getGenCoord(_idx);
-}
-
-bool BodyNode::isPresent(const GenCoord* _q) const
-{
-    return mParentJoint->isPresent(_q);
-}
-
 int BodyNode::getNumDependentDofs() const
 {
     return mDependentDofIndexes.size();
-}
-
-const std::vector<int>&BodyNode::getDependentDofIndexes() const
-{
-    return mDependentDofIndexes;
 }
 
 int BodyNode::getDependentDof(int _arrayIndex) const
@@ -461,9 +412,9 @@ void BodyNode::draw(renderer::RenderInterface* _ri,
     _ri->popName();
 
     // render the subtree
-    for (unsigned int i = 0; i < mChildJoints.size(); i++)
+    for (unsigned int i = 0; i < mChildBodyNodes.size(); i++)
     {
-        mChildJoints[i]->getChildBodyNode()->draw(_ri, _color, _useDefaultColor);
+        mChildBodyNodes[i]->draw(_ri, _color, _useDefaultColor);
     }
 
     _ri->popMatrix();
@@ -484,9 +435,8 @@ void BodyNode::drawMarkers(renderer::RenderInterface* _ri,
     for (unsigned int i = 0; i < mMarkers.size(); i++)
         mMarkers[i]->draw(_ri, true, _color, _useDefaultColor);
 
-    for (unsigned int i = 0; i < mChildJoints.size(); i++)
-        mChildJoints[i]->getChildBodyNode()->drawMarkers(_ri,_color,
-                                                         _useDefaultColor);
+    for (unsigned int i = 0; i < mChildBodyNodes.size(); i++)
+        mChildBodyNodes[i]->drawMarkers(_ri,_color, _useDefaultColor);
 
     _ri->popMatrix();
 }
@@ -542,13 +492,13 @@ void BodyNode::updateVelocity(bool _updateJacobian)
     //          n: number of dependent coordinates
     //--------------------------------------------------------------------------
 
-    const int numLocalDOFs = getNumLocalDofs();
+    const int numLocalDOFs = mParentJoint->getNumGenCoords();
     const int numParentDOFs = getNumDependentDofs()-numLocalDOFs;
 
     // Parent Jacobian
     if (mParentBodyNode != NULL)
     {
-        assert(mParentBodyNode->mBodyJacobian.cols() + getNumLocalDofs()
+        assert(mParentBodyNode->mBodyJacobian.cols() + mParentJoint->getNumGenCoords()
                == mBodyJacobian.cols());
 
         for (int i = 0; i < numParentDOFs; ++i)
@@ -570,10 +520,12 @@ void BodyNode::updateVelocity(bool _updateJacobian)
 
 void BodyNode::updateEta()
 {
-    if (mParentJoint->getDOF() > 0)
+    if (mParentJoint->getNumGenCoords() > 0)
     {
-        mEta = math::ad(mV, mParentJoint->mS*mParentJoint->get_dq()) +
-           mParentJoint->mdS*mParentJoint->get_dq();
+        mEta = math::ad(mV, mParentJoint->getLocalJacobian() *
+                            mParentJoint->get_dq()) +
+                            mParentJoint->getLocalJacobianFirstDerivative() *
+                            mParentJoint->get_dq();
 
         assert(!math::isNan(mEta));
     }
@@ -588,17 +540,19 @@ void BodyNode::updateAcceleration(bool _updateJacobianDeriv)
     //         + eta
     //         + S * ddq
 
-    if (mParentJoint->getDOF() > 0)
+    if (mParentJoint->getNumGenCoords() > 0)
     {
         if (mParentBodyNode)
         {
             mdV = math::AdInvT(mParentJoint->getLocalTransform(),
                                mParentBodyNode->getBodyAcceleration()) +
-                  mEta + mParentJoint->mS*mParentJoint->get_ddq();
+                               mEta + mParentJoint->getLocalJacobian() *
+                               mParentJoint->get_ddq();
         }
         else
         {
-            mdV = mEta + mParentJoint->mS*mParentJoint->get_ddq();
+            mdV = mEta +
+                  mParentJoint->getLocalJacobian() * mParentJoint->get_ddq();
         }
     }
 
@@ -619,13 +573,13 @@ void BodyNode::updateAcceleration(bool _updateJacobianDeriv)
     //          n: number of dependent coordinates
     //--------------------------------------------------------------------------
 
-    const int numLocalDOFs = getNumLocalDofs();
+    const int numLocalDOFs = mParentJoint->getNumGenCoords();
     const int numParentDOFs = getNumDependentDofs() - numLocalDOFs;
 
     // Parent Jacobian
     if (mParentBodyNode != NULL)
     {
-        assert(mParentBodyNode->mBodyJacobianDeriv.cols() + getNumLocalDofs()
+        assert(mParentBodyNode->mBodyJacobianDeriv.cols() + mParentJoint->getNumGenCoords()
                == mBodyJacobianDeriv.cols());
 
         for (int i = 0; i < numParentDOFs; ++i)
@@ -879,12 +833,12 @@ void BodyNode::updateArticulatedInertia()
 {
     mAI = mI;
 
-    std::vector<Joint*>::iterator iJoint;
-    for (iJoint = mChildJoints.begin(); iJoint != mChildJoints.end(); ++iJoint)
+    std::vector<BodyNode*>::iterator it;
+    for (it = mChildBodyNodes.begin(); it != mChildBodyNodes.end(); ++it)
     {
         mAI += math::transformInertia(
-                    (*iJoint)->getLocalTransform().inverse(),
-                    (*iJoint)->getChildBodyNode()->mPi);
+                    (*it)->getParentJoint()->getLocalTransform().inverse(),
+                    (*it)->mPi);
     }
 }
 
@@ -897,10 +851,10 @@ void BodyNode::updateBiasForce(const Eigen::Vector3d& _gravity)
 
     mB = -math::dad(mV, mI*mV) - mFext - mFgravity;
 
-    std::vector<Joint*>::iterator iJoint;
-    for (iJoint = mChildJoints.begin(); iJoint != mChildJoints.end(); ++iJoint)
-        mB += math::dAdInvT((*iJoint)->getLocalTransform(),
-                            (*iJoint)->getChildBodyNode()->mBeta);
+    std::vector<BodyNode*>::iterator it;
+    for (it = mChildBodyNodes.begin(); it != mChildBodyNodes.end(); ++it)
+        mB += math::dAdInvT((*it)->getParentJoint()->getLocalTransform(),
+                            (*it)->mBeta);
 
     assert(!math::isNan(mB));
 }
@@ -909,12 +863,12 @@ void BodyNode::updatePsi()
 {
     assert(mParentJoint != NULL);
 
-    //int n = mParentJoint->getDOF();
+    //int n = mParentJoint->getNumGenCoords();
     //mAI_S = Eigen::MatrixXd::Zero(6, n);
     //mPsi = Eigen::MatrixXd::Zero(n, n);
 
-    mAI_S.noalias() = mAI*mParentJoint->mS;
-    mPsi = (mParentJoint->mS.transpose()*mAI_S).inverse();
+    mAI_S.noalias() = mAI * mParentJoint->getLocalJacobian();
+    mPsi = (mParentJoint->getLocalJacobian().transpose() * mAI_S).inverse();
 }
 
 void BodyNode::updatePi()
@@ -929,19 +883,20 @@ void BodyNode::updateBeta()
 
     // TODO: Need to find more efficient way in architecture
     // Add constraint force
-    if (mParentJoint->getDOF() > 0)
+    if (mParentJoint->getNumGenCoords() > 0)
     {
         mAlpha          += mParentJoint->getDampingForces();
-        Eigen::VectorXd Fc = Eigen::VectorXd::Zero(mParentJoint->getDOF());
-        for (int i = 0; i < mParentJoint->getDOF(); i++)
-            Fc(i) = mSkeleton->getConstraintForces()[(mParentJoint->getGenCoords()[i])->getSkeletonIndex()];
+        Eigen::VectorXd Fc = Eigen::VectorXd::Zero(mParentJoint->getNumGenCoords());
+        for (int i = 0; i < mParentJoint->getNumGenCoords(); i++)
+            Fc(i) = mSkeleton->getConstraintForces()[mParentJoint->getGenCoord(i)->getSkeletonIndex()];
         mAlpha          += Fc;
     }
 
-    mAlpha          -= mParentJoint->mS.transpose()*(mAI*mEta + mB);
+    mAlpha          -= mParentJoint->getLocalJacobian().transpose() *
+                       (mAI*mEta + mB);
     mBeta            = mB;
-    if (mParentJoint->getDOF() > 0)
-        mBeta += mAI*(mEta + mParentJoint->mS*mPsi*(mAlpha));
+    if (mParentJoint->getNumGenCoords() > 0)
+        mBeta += mAI*(mEta + mParentJoint->getLocalJacobian() * mPsi * mAlpha);
     else
         mBeta += mAI*mEta;
 
@@ -955,7 +910,7 @@ void BodyNode::update_ddq()
     {
         ddq.noalias() = mPsi*
                         (mAlpha -
-                         mParentJoint->mS.transpose()*mAI*
+                         mParentJoint->getLocalJacobian().transpose() * mAI *
                          math::AdInvT(mParentJoint->getLocalTransform(),
                                       mParentBodyNode->getBodyAcceleration())
                          );

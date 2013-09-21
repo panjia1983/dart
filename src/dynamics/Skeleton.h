@@ -93,33 +93,16 @@ public:
     bool getImmobileState() const;
 
     /// @brief
-    /// @todo Let's set this state for each joints
-    bool getJointLimitState() const;
-
-    /// @brief
-    /// @todo Let's set this state for each joints
-    void setJointLimitState(bool _s);
-
-    /// @brief
     double getMass() const;
 
     //--------------------------------------------------------------------------
     // Structueral Properties
     //--------------------------------------------------------------------------
     /// @brief
-    void addBodyNode(BodyNode* _body, bool _addParentJoint = true);
-
-    /// @brief
-    void addJoint(Joint* _joint);
-
-    /// @brief
-    void setRootBodyNode(BodyNode* _body);
+    void addBodyNode(BodyNode* _body);
 
     /// @brief
     int getNumBodyNodes() const;
-
-    /// @brief
-    int getNumJoints() const;
 
     /// @brief
     BodyNode* getRootBodyNode() const;
@@ -131,16 +114,10 @@ public:
     BodyNode* getBodyNode(const std::string& _name) const;
 
     /// @brief
-    int getBodyNodeIndex(const std::string& _name) const;
-
-    /// @brief
     Joint* getJoint(int _idx) const;
 
     /// @brief
     Joint* getJoint(const std::string& _name) const;
-
-    /// @brief
-    int getJointIndex(const std::string& _name) const;
 
     /// @brief
     void addMarker(Marker *_h);
@@ -242,14 +219,6 @@ public:
     void updateForwardKinematics(bool _firstDerivative = true,
                                  bool _secondDerivative = true);
 
-    /// @brief Update joint dynamics (T, S, V, dS, dV)
-    void _updateJointKinematics(bool _firstDerivative = true,
-                                bool _secondDerivative = true);
-
-    /// @brief Update body dynamics (W, V, dV)
-    void _updateBodyForwardKinematics(bool _firstDerivative = true,
-                                      bool _secondDerivative = true);
-
     //--------------------------------------------------------------------------
     // Recursive dynamics Algorithms
 
@@ -332,9 +301,6 @@ protected:
     /// @brief
     std::vector<BodyNode*> mBodyNodes;
 
-    /// @brief
-    std::vector<Joint*> mJoints;
-
     /// @brief List of markers associated
     std::vector<Marker*> mMarkers;
 
@@ -345,9 +311,6 @@ protected:
     /// having infinite mass. If the DOFs of an immobile skeleton are manually
     /// changed, the collision results might not be correct.
     bool mImmobile;
-
-    /// @brief True if the joint limits are enforced in dynamic simulation.
-    bool mJointLimit;
 
     //--------------------------------------------------------------------------
     //

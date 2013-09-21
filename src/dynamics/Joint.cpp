@@ -43,12 +43,11 @@
 namespace dart {
 namespace dynamics {
 
-Joint::Joint(BodyNode* _parent, BodyNode* _child, const std::string& _name)
+Joint::Joint(const std::string& _name)
     : mName(_name),
       mSkelIndex(-1),
       mJointType(UNKNOWN),
-      mParentBodyNode(_parent),
-      mChildBodyNode(_child),
+      mIsPositionLimited(true),
       mT_ParentBodyToJoint(Eigen::Isometry3d::Identity()),
       mT_ChildBodyToJoint(Eigen::Isometry3d::Identity()),
       mT(Eigen::Isometry3d::Identity()),
@@ -57,8 +56,6 @@ Joint::Joint(BodyNode* _parent, BodyNode* _child, const std::string& _name)
       mdV(Eigen::Vector6d::Zero()),
       mdS(math::Jacobian::Zero(6,0))
 {
-    setParentBodyNode(mParentBodyNode);
-    setChildBodyNode(mChildBodyNode);
 }
 
 Joint::~Joint()
@@ -107,7 +104,7 @@ const Eigen::Vector6d&Joint::getLocalAcceleration() const
 
 bool Joint::isPresent(const GenCoord* _q) const
 {
-    for (unsigned int i = 0; i < getDOF(); i++)
+    for (unsigned int i = 0; i < getNumGenCoords(); i++)
         if (_q == mGenCoords[i])
             return true;
 
@@ -123,6 +120,16 @@ int Joint::getGenCoordLocalIndex(int _dofSkelIndex) const
     return -1;
 }
 
+void Joint::setPositionLimited(bool _positionLimit)
+{
+    mIsPositionLimited = _positionLimit;
+}
+
+bool Joint::isPositionLimited() const
+{
+    return mIsPositionLimited;
+}
+
 void Joint::setSkeletonIndex(int _idx)
 {
     mSkelIndex= _idx;
@@ -131,38 +138,6 @@ void Joint::setSkeletonIndex(int _idx)
 int Joint::getSkeletonIndex() const
 {
     return mSkelIndex;
-}
-
-void Joint::setParentBodyNode(BodyNode* _body)
-{
-    mParentBodyNode = _body;
-
-    if (mParentBodyNode != NULL)
-    {
-        mParentBodyNode->addChildJoint(this);
-
-        if (mChildBodyNode != NULL)
-        {
-            mChildBodyNode->setParentBodyNode(mParentBodyNode);
-            mParentBodyNode->addChildBodyNode(mChildBodyNode);
-        }
-    }
-}
-
-void Joint::setChildBodyNode(BodyNode* _body)
-{
-    mChildBodyNode = _body;
-
-    if (mChildBodyNode != NULL)
-    {
-        mChildBodyNode->setParentJoint(this);
-
-        if (mParentBodyNode != NULL)
-        {
-            mParentBodyNode->addChildBodyNode(mChildBodyNode);
-            mChildBodyNode->setParentBodyNode(mParentBodyNode);
-        }
-    }
 }
 
 void Joint::setTransformFromParentBodyNode(const Eigen::Isometry3d& _T)
@@ -179,16 +154,6 @@ void Joint::setTransformFromChildBodyNode(const Eigen::Isometry3d& _T)
     mT_ChildBodyToJoint = _T;
 }
 
-BodyNode* Joint::getParentBodyNode() const
-{
-    return mParentBodyNode;
-}
-
-BodyNode* Joint::getChildBodyNode() const
-{
-    return mChildBodyNode;
-}
-
 const Eigen::Isometry3d&Joint::getTransformFromParentBodyNode() const
 {
     return mT_ParentBodyToJoint;
@@ -199,14 +164,6 @@ const Eigen::Isometry3d&Joint::getTransformFromChildBodyNode() const
     return mT_ChildBodyToJoint;
 }
 
-void Joint::updateKinematics(bool _firstDerivative,
-                             bool _secondDerivative)
-{
-    _updateTransform();
-    _updateVelocity();
-    _updateAcceleration();
-}
-
 void Joint::applyGLTransform(renderer::RenderInterface* _ri)
 {
     _ri->transform(mT);
@@ -214,7 +171,7 @@ void Joint::applyGLTransform(renderer::RenderInterface* _ri)
 
 void Joint::setDampingCoefficient(int _idx, double _d)
 {
-    assert(0 <= _idx && _idx < getDOF());
+    assert(0 <= _idx && _idx < getNumGenCoords());
     assert(_d >= 0.0);
 
     mDampingCoefficient[_idx] = _d;
@@ -222,14 +179,14 @@ void Joint::setDampingCoefficient(int _idx, double _d)
 
 double Joint::getDampingCoefficient(int _idx) const
 {
-    assert(0 <= _idx && _idx < getDOF());
+    assert(0 <= _idx && _idx < getNumGenCoords());
 
     return mDampingCoefficient[_idx];
 }
 
 Eigen::VectorXd Joint::getDampingForces() const
 {
-    int numDofs = getDOF();
+    int numDofs = getNumGenCoords();
     Eigen::VectorXd dampingForce(numDofs);
 
     for (int i = 0; i < numDofs; ++i)

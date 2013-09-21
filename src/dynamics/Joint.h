@@ -75,8 +75,7 @@ public:
     // Constructor and Destructor
     //--------------------------------------------------------------------------
     /// @brief
-    Joint(BodyNode* _parent = NULL, BodyNode* _child = NULL,
-          const std::string& _name = "");
+    Joint(const std::string& _name = "");
 
     /// @brief
     virtual ~Joint();
@@ -119,6 +118,15 @@ public:
     int getGenCoordLocalIndex(int _dofSkelIndex) const;
 
     //--------------------------------------------------------------------------
+    // Dynamics Properties
+    //--------------------------------------------------------------------------
+    /// @brief
+    void setPositionLimited(bool _positionLimit);
+
+    /// @brief
+    bool isPositionLimited() const;
+
+    //--------------------------------------------------------------------------
     // Structueral Properties
     //--------------------------------------------------------------------------
     /// @brief
@@ -128,22 +136,10 @@ public:
     int getSkeletonIndex() const;
 
     /// @brief
-    void setParentBodyNode(BodyNode* _body);
-
-    /// @brief
-    void setChildBodyNode(BodyNode* _body);
-
-    /// @brief
     void setTransformFromParentBodyNode(const Eigen::Isometry3d& _T);
 
     /// @brief
     void setTransformFromChildBodyNode(const Eigen::Isometry3d& _T);
-
-    /// @brief
-    BodyNode* getParentBodyNode() const;
-
-    /// @brief
-    BodyNode* getChildBodyNode() const;
 
     /// @brief
     const Eigen::Isometry3d& getTransformFromParentBodyNode() const;
@@ -159,8 +155,18 @@ public:
     // Recursive Kinematics Algorithms
     //--------------------------------------------------------------------------
     /// @brief
-    void updateKinematics(bool _firstDerivative = true,
-                          bool _secondDerivative = true);
+    /// q --> T(q)
+    virtual void updateTransform() = 0;
+
+    /// @brief
+    /// q, dq --> S(q), V(q, dq)
+    /// V(q, dq) = S(q) * dq
+    virtual void updateVelocity() = 0;
+
+    /// @brief
+    /// dq, ddq, S(q) --> dS(q), dV(q, dq, ddq)
+    /// dV(q, dq, ddq) = dS(q) * dq + S(q) * ddq
+    virtual void updateAcceleration() = 0;
 
     /// @brief
     void setDampingCoefficient(int _idx, double _d);
@@ -181,26 +187,6 @@ protected:
     //
     //--------------------------------------------------------------------------
     /// @brief
-    /// q --> T(q)
-    virtual void _updateTransform() = 0;
-
-    /// @brief
-    /// q, dq --> S(q), V(q, dq)
-    /// V(q, dq) = S(q) * dq
-    virtual void _updateVelocity() = 0;
-
-    /// @brief
-    /// dq, ddq, S(q) --> dS(q), dV(q, dq, ddq)
-    /// dV(q, dq, ddq) = dS(q) * dq + S(q) * ddq
-    virtual void _updateAcceleration() = 0;
-
-//    /// @brief
-//    virtual void updateDampingForce() = 0;
-
-    //--------------------------------------------------------------------------
-    //
-    //--------------------------------------------------------------------------
-    /// @brief
     std::string mName;
 
     //--------------------------------------------------------------------------
@@ -211,12 +197,6 @@ protected:
 
     /// @brief Type of joint e.g. ball, hinge etc.
     JointType mJointType;
-
-    /// @brief
-    BodyNode* mParentBodyNode;
-
-    /// @brief
-    BodyNode* mChildBodyNode;
 
     /// @brief
     Eigen::Isometry3d mT_ParentBodyToJoint;
@@ -245,14 +225,14 @@ protected:
     //--------------------------------------------------------------------------
     // Dynamics variables
     //--------------------------------------------------------------------------
+    /// @brief True if the joint limits are enforced in dynamic simulation.
+    bool mIsPositionLimited;
+
     /// @brief
     std::vector<double> mDampingCoefficient;
 
     /// @brief
     std::vector<double> mSpringStiffness;
-
-private:
-    friend class BodyNode;
 };
 
 } // namespace dynamics

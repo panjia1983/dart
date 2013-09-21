@@ -197,21 +197,6 @@ public:
     Joint* getParentJoint() const;
 
     /// @brief
-    void addChildJoint(Joint* _joint);
-
-    /// @brief
-    Joint* getChildJoint(int _idx) const;
-
-    /// @brief
-    const std::vector<Joint*>& getChildJoints() const;
-
-    /// @brief
-    int getNumChildJoints() const;
-
-    /// @brief
-    void setParentBodyNode(BodyNode* _body);
-
-    /// @brief
     BodyNode* getParentBodyNode() const;
 
     /// @brief
@@ -221,7 +206,7 @@ public:
     BodyNode* getChildBodyNode(int _idx) const;
 
     /// @brief
-    const std::vector<BodyNode*>& getChildBodies() const;
+    int getNumChildBodyNodes() const;
 
     /// @brief
     void addMarker(Marker* _h);
@@ -240,20 +225,8 @@ public:
     /// efficiency.
     bool dependsOn(int _dofIndex) const;
 
-    /// @brief
-    int getNumLocalDofs() const;
-
-    /// @brief
-    GenCoord* getLocalGenCoord(int _idx) const;
-
-    /// @brief true if d is present in the dof list for the joint.
-    bool isPresent(const GenCoord* _q) const;
-
     /// @brief The number of the dofs by which this node is affected.
     int getNumDependentDofs() const;
-
-    /// @brief
-    const std::vector<int>& getDependentDofIndexes() const;
 
     /// @brief Return an dof index from the array index (< getNumDependentDofs).
     int getDependentDof(int _arrayIndex) const;
@@ -518,9 +491,6 @@ protected:
     Joint* mParentJoint;
 
     /// @brief
-    std::vector<Joint*> mChildJoints;
-
-    /// @brief
     BodyNode* mParentBodyNode;
 
     /// @brief
@@ -572,11 +542,6 @@ protected:
 
     /// @brief
     Eigen::MatrixXd mM;
-
-    /// @brief List of contact points where external forces are applied.
-    /// contact points are a pair of (local point offset, Cartesian force in
-    /// local coordinates).
-    std::vector< std::pair<Eigen::Vector3d, Eigen::Vector3d> > mContacts;
 
 private:
     void _updateGeralizedInertia();
