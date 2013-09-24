@@ -224,21 +224,9 @@ int BodyNode::getDependentDof(int _arrayIndex) const
     return mDependentDofIndexes[_arrayIndex];
 }
 
-void BodyNode::setWorldTransform(const Eigen::Isometry3d &_W)
-{
-    assert(math::verifyTransform(_W));
-
-    mW = _W;
-}
-
 const Eigen::Isometry3d& BodyNode::getWorldTransform() const
 {
     return mW;
-}
-
-Eigen::Isometry3d BodyNode::getWorldInvTransform() const
-{
-    return mW.inverse();
 }
 
 Eigen::Vector3d BodyNode::evalWorldPos(const Eigen::Vector3d& _lp) const
@@ -709,7 +697,7 @@ void BodyNode::addExtForce(const Eigen::Vector3d& _offset,
     if (_isOffsetLocal)
         T.translation() = _offset;
     else
-        T.translation() = getWorldInvTransform() * _offset;
+        T.translation() = getWorldTransform().inverse() * _offset;
 
     if (_isForceLocal)
         F.tail<3>() = _force;
@@ -729,7 +717,7 @@ void BodyNode::setExtForce(const Eigen::Vector3d& _offset,
     if (_isOffsetLocal)
         T.translation() = _offset;
     else
-        T.translation() = getWorldInvTransform() * _offset;
+        T.translation() = getWorldTransform().inverse() * _offset;
 
     if (_isForceLocal)
         F.tail<3>() = _force;
