@@ -19,6 +19,7 @@ before_install() {
   # Install console_bridge
   hg clone https://bitbucket.org/osrf/urdfdom
   (cd urdfdom; cmake .; make && sudo make install)
+  # Install sdformat
   hg clone https://bitbucket.org/osrf/sdformat
   (cd sdformat; hg up sdf_1.4; cmake .; make && sudo make install)
 }
