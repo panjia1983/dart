@@ -19,6 +19,8 @@ before_install() {
   # Install console_bridge
   hg clone https://bitbucket.org/osrf/urdfdom
   (cd urdfdom; cmake .; make && sudo make install)
+  hg clone https://bitbucket.org/osrf/sdformat
+  (cd sdformat; hg up sdf_1.4; cmake .; make && sudo make install)
 }
 
 APT='freeglut3 freeglut3-dev libglu1-mesa-dev libboost-all-dev cmake

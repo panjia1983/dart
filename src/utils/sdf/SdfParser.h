@@ -3,9 +3,9 @@
 
 #include <map>
 #include <string>
+
 #include <Eigen/Dense>
-// TinyXML-2 Library
-// http://www.grinninglizard.com/tinyxml2/index.html
+#include <sdf/sdf.hh>
 #include <tinyxml2.h>
 
 #include "utils/Parser.h"
