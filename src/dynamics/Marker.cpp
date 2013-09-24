@@ -45,12 +45,11 @@ namespace dynamics {
 
 int Marker::msMarkerCount = 0;
 
-Marker::Marker(const char* _name, Eigen::Vector3d& _offset, BodyNode *_node,
+Marker::Marker(const std::string& _name, Eigen::Vector3d& _offset,
                ConstraintType _type)
-    : mNode(_node), mOffset(_offset), mType(_type)
+    : mName(_name), mOffset(_offset), mType(_type)
 {
     mID = Marker::msMarkerCount++;
-    strcpy(mName, _name);
 }
 
 Marker::~Marker()
@@ -91,12 +90,6 @@ void Marker::draw(renderer::RenderInterface* _ri, bool _offset,
     }
 
     _ri->popName();
-
-}
-
-Eigen::Vector3d Marker::getWorldCoords()
-{
-    return mNode->evalWorldPos(mOffset);
 }
 
 Eigen::Vector3d Marker::getLocalCoords() const
@@ -124,12 +117,12 @@ int Marker::getID() const
     return mID;
 }
 
-BodyNode* Marker::getNode() const
+void Marker::setName(const std::string& _name)
 {
-    return mNode;
+    mName = _name;
 }
 
-const char* Marker::getName() const
+const std::string& Marker::getName() const
 {
     return mName;
 }

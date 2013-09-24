@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     // load a skeleton file
     // create and initialize the world
     dart::simulation::World* myWorld
-            = dart::utils::readSkelFile(DART_DATA_PATH"/skel/chain.skel");
+            = utils::SkelParser::readSkelFile(DART_DATA_PATH"/skel/chain.skel");
     assert(myWorld != NULL);
     
     // create and initialize the world
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     myWorld->setGravity(gravity);
     myWorld->setTimeStep(1.0/2000);
 
-    int dof =  myWorld->getSkeleton(0)->getDOF();
+    int dof =  myWorld->getSkeleton(0)->getNumGenCoords();
     Eigen::VectorXd initPose(dof);
     for (int i = 0; i < dof; i++)
         initPose[i] = random(-0.5, 0.5);

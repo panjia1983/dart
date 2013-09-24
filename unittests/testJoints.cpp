@@ -39,7 +39,6 @@
 #include <gtest/gtest.h>
 #include "TestHelpers.h"
 
-#include "common/UtilsCode.h"
 #include "math/Geometry.h"
 #include "math/Helpers.h"
 #include "dynamics/BallJoint.h"
@@ -52,6 +51,9 @@
 #include "dynamics/WeldJoint.h"
 #include "dynamics/EulerJoint.h"
 #include "dynamics/ScrewJoint.h"
+#include "simulation/World.h"
+#include "utils/Paths.h"
+#include "utils/SkelParser.h"
 
 using namespace dart;
 using namespace math;
@@ -69,7 +71,7 @@ public:
 /******************************************************************************/
 void JOINTS::kinematicsTest(Joint* _joint)
 {
-    int dof = _joint->getDOF();
+    int dof = _joint->getNumGenCoords();
 
     //--------------------------------------------------------------------------
     //
@@ -93,9 +95,11 @@ void JOINTS::kinematicsTest(Joint* _joint)
         _joint->set_dq(dq);
         _joint->set_ddq(ddq);
 
-        _joint->updateKinematics();
+        _joint->updateTransform();
+        _joint->updateVelocity();
+        _joint->updateAcceleration();
 
-        if (_joint->getDOF() == 0)
+        if (_joint->getNumGenCoords() == 0)
             return;
 
         Eigen::Isometry3d T = _joint->getLocalTransform();
@@ -135,14 +139,14 @@ void JOINTS::kinematicsTest(Joint* _joint)
             // a
             Eigen::VectorXd q_a = q;
             _joint->set_q(q_a);
-            _joint->updateKinematics();
+            _joint->updateTransform();
             Eigen::Isometry3d T_a = _joint->getLocalTransform();
 
             // b
             Eigen::VectorXd q_b = q;
             q_b(i) += dt;
             _joint->set_q(q_b);
-            _joint->updateKinematics();
+            _joint->updateTransform();
             Eigen::Isometry3d T_b = _joint->getLocalTransform();
 
             //
@@ -182,14 +186,14 @@ void JOINTS::kinematicsTest(Joint* _joint)
             // a
             Eigen::VectorXd q_a = q;
             _joint->set_q(q_a);
-            _joint->updateKinematics();
+            _joint->updateVelocity();
             Jacobian J_a = _joint->getLocalJacobian();
 
             // b
             Eigen::VectorXd q_b = q;
             q_b(i) += dt;
             _joint->set_q(q_b);
-            _joint->updateKinematics();
+            _joint->updateVelocity();
             Jacobian J_b = _joint->getLocalJacobian();
 
             //
@@ -278,6 +282,62 @@ TEST_F(JOINTS, FREE_JOINT)
     FreeJoint freeJoint;
 
     kinematicsTest(&freeJoint);
+}
+
+TEST_F(JOINTS, POSITION_LIMIT)
+{
+    double tol = 1e-4;
+
+    simulation::World* myWorld = utils::SkelParser::readSkelFile(
+            DART_DATA_PATH"/skel/test/joint_limit_test.skel");
+    EXPECT_TRUE(myWorld != NULL);
+
+    myWorld->setGravity(Eigen::Vector3d(0.0, 0.0, -9.81));
+
+    dynamics::Skeleton* pendulum = myWorld->getSkeleton("double_pendulum");
+    EXPECT_TRUE(pendulum != NULL);
+
+    dynamics::Joint* joint0 = pendulum->getJoint("joint0");
+    dynamics::Joint* joint1 = pendulum->getJoint("joint1");
+
+    EXPECT_TRUE(joint0 != NULL);
+    EXPECT_TRUE(joint1 != NULL);
+
+    double limit0 = DART_PI / 6.0;
+    double limit1 = DART_PI / 6.0;
+
+    joint0->setPositionLimited(true);
+    joint0->getGenCoord(0)->set_qMin(-limit0);
+    joint0->getGenCoord(0)->set_qMax(limit0);
+
+    joint1->setPositionLimited(true);
+    joint1->getGenCoord(0)->set_qMin(-limit1);
+    joint1->getGenCoord(0)->set_qMax(limit1);
+
+    double simTime = 2.0;
+    double timeStep = myWorld->getTimeStep();
+    int nSteps = simTime / timeStep;
+
+    for (int i = 0; i < nSteps; i++)
+    {
+        myWorld->step();
+    }
+
+    double jointPos0 = joint0->getGenCoord(0)->get_q();
+    double jointPos1 = joint1->getGenCoord(0)->get_q();
+
+    double jointVel0 = joint0->getGenCoord(0)->get_dq();
+    double jointVel1 = joint1->getGenCoord(0)->get_dq();
+
+    // NOTE: The ideal result is that the joint position limit was obeyed with
+    //       zero tolerance. To do so, DART should correct the joint limit
+    //       violation in which is not implemented yet. This feature should be
+    //       added in DART.
+    EXPECT_NEAR(jointPos0, -limit0, 1e-4);
+    EXPECT_NEAR(jointPos1, -limit1, 1e-3);
+
+    EXPECT_NEAR(jointVel0, 0.0, tol);
+    EXPECT_NEAR(jointVel1, 0.0, tol);
 }
 
 /******************************************************************************/

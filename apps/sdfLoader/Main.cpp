@@ -1,3 +1,4 @@
+#include <iostream>
 #include "utils/Paths.h"
 #include "utils/sdf/SdfParser.h"
 #include "MyWindow.h"
@@ -5,7 +6,7 @@
 int main(int argc, char* argv[])
 {
     // load a world
-    dart::simulation::World* myWorld = dart::utils::readSdfFile(
+    dart::simulation::World* myWorld = dart::utils::SdfParser::readSdfFile(
                 DART_DATA_PATH"/sdf/double_pendulum_with_base.world");
     assert(myWorld != NULL);
 

@@ -40,18 +40,12 @@
 #define DART_DYNAMICS_SKELETON_H
 
 #include <vector>
-
 #include <Eigen/Dense>
-
 #include "math/Geometry.h"
 #include "dynamics/GenCoordSystem.h"
 
 namespace dart {
-
-namespace renderer {
-class RenderInterface;
-}
-
+namespace renderer { class RenderInterface; }
 namespace dynamics {
 
 class BodyNode;
@@ -66,7 +60,7 @@ public:
     // Constructor and Destructor
     //--------------------------------------------------------------------------
     /// @brief Constructor
-    Skeleton(const std::string& _name = "");
+    Skeleton(const std::string& _name = "Skeleton");
 
     /// @brief Destructor
     virtual ~Skeleton();
@@ -93,33 +87,16 @@ public:
     bool getImmobileState() const;
 
     /// @brief
-    /// @todo Let's set this state for each joints
-    bool getJointLimitState() const;
-
-    /// @brief
-    /// @todo Let's set this state for each joints
-    void setJointLimitState(bool _s);
-
-    /// @brief
     double getMass() const;
 
     //--------------------------------------------------------------------------
     // Structueral Properties
     //--------------------------------------------------------------------------
     /// @brief
-    void addBodyNode(BodyNode* _body, bool _addParentJoint = true);
-
-    /// @brief
-    void addJoint(Joint* _joint);
-
-    /// @brief
-    void setRootBodyNode(BodyNode* _body);
+    void addBodyNode(BodyNode* _body);
 
     /// @brief
     int getNumBodyNodes() const;
-
-    /// @brief
-    int getNumJoints() const;
 
     /// @brief
     BodyNode* getRootBodyNode() const;
@@ -131,22 +108,10 @@ public:
     BodyNode* getBodyNode(const std::string& _name) const;
 
     /// @brief
-    int getBodyNodeIndex(const std::string& _name) const;
-
-    /// @brief
     Joint* getJoint(int _idx) const;
 
     /// @brief
     Joint* getJoint(const std::string& _name) const;
-
-    /// @brief
-    int getJointIndex(const std::string& _name) const;
-
-    /// @brief
-    void addMarker(Marker *_h);
-
-    /// @brief
-    int getNumMarkers() const;
 
     /// @brief
     Marker* getMarker(int _i);
@@ -155,7 +120,7 @@ public:
     Marker* getMarker(const std::string& _name) const;
 
     //--------------------------------------------------------------------------
-    // Properties updated by dynamics (kinematics)
+    // Properties updated by dynamics
     //--------------------------------------------------------------------------
     /// @brief
     void setConfig(const std::vector<int>& _id, Eigen::VectorXd _vals,
@@ -233,28 +198,14 @@ public:
     Eigen::Vector3d getWorldCOM();
 
     //--------------------------------------------------------------------------
-    // Recursive kinematics Algorithms
+    // Recursive dynamics algorithms
     //--------------------------------------------------------------------------
     /// @brief
-    void initKinematics();
+    void init();
 
     /// @brief Update joint and body kinematics.
     void updateForwardKinematics(bool _firstDerivative = true,
                                  bool _secondDerivative = true);
-
-    /// @brief Update joint dynamics (T, S, V, dS, dV)
-    void _updateJointKinematics(bool _firstDerivative = true,
-                                bool _secondDerivative = true);
-
-    /// @brief Update body dynamics (W, V, dV)
-    void _updateBodyForwardKinematics(bool _firstDerivative = true,
-                                      bool _secondDerivative = true);
-
-    //--------------------------------------------------------------------------
-    // Recursive dynamics Algorithms
-
-    /// @brief
-    void initDynamics();
 
     /// @brief (q, dq, ddq) --> (tau)
     void computeInverseDynamicsLinear(const Eigen::Vector3d& _gravity,
@@ -304,10 +255,6 @@ public:
                                   bool _equationsOfMotion = true);
 
     /// @brief (q, dq, tau) --> (ddq)
-    void computeForwardDynamicsID2(const Eigen::Vector3d& _gravity,
-                                  bool _equationsOfMotion = true);
-
-    /// @brief (q, dq, tau) --> (ddq)
     void computeForwardDynamicsFS(const Eigen::Vector3d& _gravity,
                                   bool _equationsOfMotion = true);
 
@@ -336,12 +283,6 @@ protected:
     /// @brief
     std::vector<BodyNode*> mBodyNodes;
 
-    /// @brief
-    std::vector<Joint*> mJoints;
-
-    /// @brief List of markers associated
-    std::vector<Marker*> mMarkers;
-
     //--------------------------------------------------------------------------
     //
     //--------------------------------------------------------------------------
@@ -349,9 +290,6 @@ protected:
     /// having infinite mass. If the DOFs of an immobile skeleton are manually
     /// changed, the collision results might not be correct.
     bool mImmobile;
-
-    /// @brief True if the joint limits are enforced in dynamic simulation.
-    bool mJointLimit;
 
     //--------------------------------------------------------------------------
     //
