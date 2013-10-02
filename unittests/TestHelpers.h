@@ -36,10 +36,11 @@ enum TypeOfDOF {
     DOF_X, DOF_Y, DOF_Z, DOF_ROLL, DOF_PITCH, DOF_YAW
 };
 
-/* ********************************************************************************************* */
+/* ************************************************************************** */
 /// Returns true if the two matrices are equal within the given bound
 template <class MATRIX>
-bool equals (const Eigen::DenseBase<MATRIX>& A, const Eigen::DenseBase<MATRIX>& B, double tol = 1e-5) {
+bool equals (const Eigen::DenseBase<MATRIX>& A,
+             const Eigen::DenseBase<MATRIX>& B, double tol = 1e-5) {
 
     // Get the matrix sizes and sanity check the call
     const size_t n1 = A.cols(), m1 = A.rows();
@@ -60,7 +61,7 @@ bool equals (const Eigen::DenseBase<MATRIX>& A, const Eigen::DenseBase<MATRIX>& 
     return true;
 }
 
-/* ********************************************************************************************* */
+/* ************************************************************************** */
 /// Add an end-effector to the last link of the given robot
 void addEndEffector (Skeleton* robot, BodyNode* parent_node, Vector3d dim) {
 
@@ -80,7 +81,7 @@ void addEndEffector (Skeleton* robot, BodyNode* parent_node, Vector3d dim) {
     robot->addBodyNode(node);
 }
 
-/* ********************************************************************************************* */
+/* ************************************************************************** */
 /// Add a DOF to a given joint
 Joint* create1DOFJoint(double val, double min, double max, int type) {
 
@@ -98,7 +99,8 @@ Joint* create1DOFJoint(double val, double min, double max, int type) {
         newJoint = new RevoluteJoint(Eigen::Vector3d(0.0, 1.0, 0.0));
     else if(type == DOF_ROLL)
         newJoint = new RevoluteJoint(Eigen::Vector3d(1.0, 0.0, 0.0));
-    // Add the transformation to the joint, set the min/max values and set it to the skeleton
+    // Add the transformation to the joint, set the min/max values and set it to
+    // the skeleton
     newJoint->getGenCoord(0)->set_q(val);
     newJoint->getGenCoord(0)->set_qMin(min);
     newJoint->getGenCoord(0)->set_qMax(max);
@@ -106,11 +108,13 @@ Joint* create1DOFJoint(double val, double min, double max, int type) {
     return newJoint;
 }
 
-/* ********************************************************************************************* */
-/// Creates a two link manipulator with the given dimensions where the first link rotates around
-/// z-axis and second rotates around x in the zero configuration.
-Skeleton* createTwoLinkRobot (Vector3d dim1, TypeOfDOF type1, Vector3d dim2, TypeOfDOF type2, bool
-        unfinished = false) {
+/* ************************************************************************** */
+/// Creates a two-link manipulator with the given dimensions where the first
+/// link rotates around z-axis and second rotates around x in the zero
+/// configuration.
+Skeleton* createTwoLinkRobot (Vector3d dim1, TypeOfDOF type1,
+                              Vector3d dim2, TypeOfDOF type2,
+                              bool unfinished = false) {
 
     Skeleton* robot = new Skeleton();
 
@@ -152,11 +156,14 @@ Skeleton* createTwoLinkRobot (Vector3d dim1, TypeOfDOF type1, Vector3d dim2, Typ
     return robot;
 }
 
-/* ********************************************************************************************* */
-/// Creates a two link manipulator with the given dimensions where the first link rotates around
-/// z-axis and second rotates around x in the zero configuration.
-Skeleton* createThreeLinkRobot (Vector3d dim1, TypeOfDOF type1, Vector3d dim2, TypeOfDOF type2,
-        Vector3d dim3, TypeOfDOF type3, bool unfinished = false) {
+/* ************************************************************************** */
+/// Creates a three-link manipulator with the given dimensions where the first
+/// link rotates around z-axis and second rotates around x in the zero
+/// configuration.
+Skeleton* createThreeLinkRobot (Vector3d dim1, TypeOfDOF type1,
+                                Vector3d dim2, TypeOfDOF type2,
+                                Vector3d dim3, TypeOfDOF type3,
+                                bool unfinished = false) {
 
     Skeleton* robot = new Skeleton();
 
@@ -210,6 +217,60 @@ Skeleton* createThreeLinkRobot (Vector3d dim1, TypeOfDOF type1, Vector3d dim2, T
     // If finished, initialize the skeleton
     if(!unfinished) {
         addEndEffector(robot, node, dim3);
+        robot->initDynamics();
+    }
+    return robot;
+}
+
+
+/* ************************************************************************** */
+/// Creates a N-link manipulator with the given dimensions where the first link
+/// rotates around z-axis and second rotates around x in the zero configuration.
+Skeleton* createNLinkRobot (int _n, Vector3d dim, TypeOfDOF type,
+                            bool unfinished = false) {
+
+    assert(1 <= _n);
+
+    Skeleton* robot = new Skeleton();
+
+    // Create the first link, the joint with the ground and its shape
+    double mass = 1.0;
+    BodyNode* node = new BodyNode("link1");
+    Joint* joint = create1DOFJoint(0.0, -DART_PI, DART_PI, type);
+    joint->setName("joint1");
+    Shape* shape = new BoxShape(dim);
+    node->setLocalCOM(Vector3d(0.0, 0.0, dim(2)/2.0));
+    node->addVisualizationShape(shape);
+    node->addCollisionShape(shape);
+    node->setMass(mass);
+    node->setParentJoint(joint);
+    robot->addBodyNode(node);
+
+    // Create links, joints, and shapes
+    for (int i = 1; i < _n; ++_n)
+    {
+        BodyNode* parent_node = robot->getBodyNode(i-1);
+        std::string linkName = "link" + i;
+        std::string jointName = "joint" + i;
+        node = new BodyNode(linkName);
+        joint = create1DOFJoint(0.0, -DART_PI, DART_PI, type);
+        joint->setName(jointName );
+        Eigen::Isometry3d T = Eigen::Isometry3d::Identity();
+        T.translate(Eigen::Vector3d(0.0, 0.0, dim(2)));
+        joint->setTransformFromParentBodyNode(T);
+        shape = new BoxShape(dim);
+        node->setLocalCOM(Vector3d(0.0, 0.0, dim(2)/2.0));
+        node->addVisualizationShape(shape);
+        node->addCollisionShape(shape);
+        node->setMass(mass);
+        node->setParentJoint(joint);
+        parent_node->addChildBodyNode(node);
+        robot->addBodyNode(node);
+    }
+
+    // If finished, initialize the skeleton
+    if(!unfinished) {
+        addEndEffector(robot, node, dim);
         robot->initDynamics();
     }
     return robot;

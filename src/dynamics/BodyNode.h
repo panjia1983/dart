@@ -73,6 +73,7 @@ Runge-Kutta and fourth-order Runge Kutta.
 #ifndef DART_DYNAMICS_BODYNODE_H
 #define DART_DYNAMICS_BODYNODE_H
 
+#include <map>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -436,6 +437,12 @@ public:
     /// @brief
     void aggregateMass(Eigen::MatrixXd& M);
 
+    /// @brief
+    void aggregateMassFS(Eigen::MatrixXd& _M);
+
+    /// @brief
+    void aggregateMassInverseFS(Eigen::MatrixXd& _MInv, BodyNode* _bodyNode);
+
 protected:
     //--------------------------------------------------------------------------
     // General properties
@@ -539,6 +546,10 @@ protected:
     math::Inertia mPi;
     Eigen::VectorXd mAlpha;
     Eigen::Vector6d mBeta;
+
+    std::map<BodyNode*, math::Inertia> mImap;
+    std::map<BodyNode*, math::Inertia> mAmap;
+    math::Inertia mY;
 
     /// @brief
     Eigen::MatrixXd mM;

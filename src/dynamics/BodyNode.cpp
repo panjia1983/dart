@@ -80,6 +80,7 @@ BodyNode::BodyNode(const std::string& _name)
       mF(Eigen::Vector6d::Zero()),
       mFext(Eigen::Vector6d::Zero()),
       mFgravity(Eigen::Vector6d::Zero()),
+      mAI(Eigen::Matrix6d::Identity()),
       mB(Eigen::Vector6d::Zero()),
       mBeta(Eigen::Vector6d::Zero()),
       mID(BodyNode::msBodyNodeCount++)
@@ -959,6 +960,141 @@ void BodyNode::aggregateMass(Eigen::MatrixXd& _M)
     for(int i = 0; i < getNumDependentDofs(); i++)
         for(int j = 0; j < getNumDependentDofs(); j++)
             _M(mDependentDofIndexes[i], mDependentDofIndexes[j]) += mM(i, j);
+}
+
+void BodyNode::aggregateMassFS(Eigen::MatrixXd& _M)
+{
+    BodyNode* node1 = this;
+
+    int n = mParentJoint->getNumGenCoords();
+
+    Eigen::MatrixXd M(n,n);
+
+    const math::Jacobian& J = mParentJoint->getLocalJacobian();
+
+    //--------------------------------------------------------------------------
+    // M(j,j)
+    //--------------------------------------------------------------------------
+    mImap[this] = mI;
+
+    for (int i = 0; i < getNumChildBodyNodes(); i++)
+    {
+        const Joint* childJoint         = mChildBodyNodes[i]->getParentJoint();
+        const Eigen::Isometry3d& childT = childJoint->getLocalTransform();
+
+        mImap[this] += mChildBodyNodes[i]->mImap[this] *
+                       math::AdT(childT.inverse());
+    }
+
+    M = J.transpose() * mImap[this] * J;
+
+    // Assigning
+    for(int i = 0; i < n; i++)
+    {
+        int iSkelIdx = mParentJoint->getGenCoord(i)->getSkeletonIndex();
+
+        for(int j = 0; j < n; j++)
+        {
+            int jSkelIdx = mParentJoint->getGenCoord(j)->getSkeletonIndex();
+
+            _M(iSkelIdx, jSkelIdx) += M(i, j);
+        }
+    }
+
+    node1 = node1->getParentBodyNode();
+
+    //--------------------------------------------------------------------------
+    // M(j,k), k = lambda(j), lambda(lambda(j)), ... , base
+    //--------------------------------------------------------------------------
+    while (node1)
+    {
+        mImap[node1] = math::Inertia::Zero();
+
+        for (int i = 0; i < node1->getNumChildBodyNodes(); ++i)
+        {
+            BodyNode* childBodyNode         = node1->getChildBodyNode(i);
+            const Joint* childJoint         = childBodyNode->getParentJoint();
+            const Eigen::Isometry3d& childT = childJoint->getLocalTransform();
+
+            mImap[node1] += math::dAdT(childT.inverse()) *
+                            childBodyNode->mImap[childBodyNode];
+        }
+
+        int m = node1->getParentJoint()->getNumGenCoords();
+        Eigen::MatrixXd M2(m,n);
+        const math::Jacobian& J2 = node1->getParentJoint()->getLocalJacobian();
+
+        M2 = J2.transpose() * mImap[node1] * J;
+
+        // Assigning
+        for(int i = 0; i < m; i++)
+        {
+            int iSkelIdx = node1->getParentJoint()->getGenCoord(i)->getSkeletonIndex();
+
+            for(int j = 0; j < n; j++)
+            {
+                int jSkelIdx = mParentJoint->getGenCoord(j)->getSkeletonIndex();
+
+                _M(iSkelIdx, jSkelIdx) += M2(i, j);
+                _M(jSkelIdx, iSkelIdx) += M2(i, j);
+            }
+        }
+
+        node1 = node1->getParentBodyNode();
+    }
+}
+
+void BodyNode::aggregateMassInverseFS(Eigen::MatrixXd& _MInv, BodyNode* _bodyNode)
+{
+    int n = mParentJoint->getNumGenCoords();
+    const math::Jacobian& J = mParentJoint->getLocalJacobian();
+
+    // M(j,j)
+    if (_bodyNode == this)
+    {
+        Eigen::MatrixXd MInv(n,n);
+        mAmap[this] = Eigen::Matrix6d::Zero();
+        Eigen::Matrix<double,6,Eigen::Dynamic> Kappa =
+                Eigen::MatrixXd::Zero(6,n);
+
+        mY = math::Inertia::Zero();
+
+        BodyNode* parentBodyNode = _bodyNode->mParentBodyNode;
+
+        if (parentBodyNode)
+        {
+            const Joint* parentJoint = parentBodyNode->mParentJoint;
+            const math::Jacobian& parentJ = parentJoint->getLocalJacobian();
+            const Eigen::MatrixXd& parentPsi = parentBodyNode->mPsi;
+
+            mY = math::dAdT(parentBodyNode->getParentJoint()->getLocalTransform().inverse()) * parentBodyNode->mPi;
+
+            mAmap[this] = parentJ * parentPsi * parentJ.transpose();
+            mAmap[this] += parentBodyNode->mY.transpose() * parentBodyNode->mAmap[this];
+        }
+
+        MInv = mPsi + Kappa.transpose() * mAmap[this] * Kappa;
+
+        // Assigning
+        for(int i = 0; i < n; i++)
+        {
+            int iSkelIdx = mParentJoint->getGenCoord(i)->getSkeletonIndex();
+
+            for(int j = 0; j < n; j++)
+            {
+                int jSkelIdx = mParentJoint->getGenCoord(j)->getSkeletonIndex();
+
+                _MInv(iSkelIdx, jSkelIdx) += MInv(i, j);
+            }
+        }
+    }
+    // M(j,k), k = lambda(j), lambda(lambda(j)), ... , base
+    else
+    {
+
+    }
+
+
 }
 
 void BodyNode::_updateGeralizedInertia()

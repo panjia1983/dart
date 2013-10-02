@@ -572,6 +572,26 @@ TEST(LIE_GROUP_OPERATORS, ADJOINT_MAPPINGS)
         for (int j = 0; j < 6; ++j)
             EXPECT_NEAR(dad_V_F(j), dadV_Matrix_F(j), LIE_GROUP_OPT_TOL);
     }
+
+    //
+    for (int i = 0; i < numTest; ++i)
+    {
+        Eigen::Vector6d t   = Eigen::Vector6d::Random();
+        Eigen::Isometry3d T = math::expMap(t);
+        Eigen::Vector6d V   = Eigen::Vector6d::Random();
+        Eigen::Vector6d F   = Eigen::Vector6d::Random();
+
+        Eigen::Vector6d AdT1 = AdT(T, V);
+        Eigen::Vector6d AdT2 = AdT(T) * V;
+
+        Eigen::Vector6d dAdT1 = dAdT(T, F);
+        Eigen::Vector6d dAdT2 = dAdT(T) * F;
+
+        //
+        EXPECT_TRUE(equals(AdT1, AdT2));
+        EXPECT_TRUE(equals(dAdT1, dAdT2));
+        std::cout << "ASDF2222";
+    }
 }
 
 /******************************************************************************/

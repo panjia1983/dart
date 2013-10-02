@@ -36,6 +36,7 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "common/Timer.h"
 #include "math/Geometry.h"
 #include "math/Helpers.h"
 #include "dynamics/BodyNode.h"
@@ -102,7 +103,9 @@ void Skeleton::initDynamics()
     int DOF = getNumGenCoords();
 
     mM    = Eigen::MatrixXd::Zero(DOF, DOF);
+    mM_FS = Eigen::MatrixXd::Zero(DOF, DOF);
     mMInv = Eigen::MatrixXd::Zero(DOF, DOF);
+    mMInv_FS = Eigen::MatrixXd::Zero(DOF, DOF);
     mC    = Eigen::MatrixXd::Zero(DOF, DOF);
     mCvec = Eigen::VectorXd::Zero(DOF);
     mG    = Eigen::VectorXd::Zero(DOF);
@@ -266,9 +269,19 @@ Eigen::MatrixXd Skeleton::getMassMatrix() const
     return mM;
 }
 
+Eigen::MatrixXd Skeleton::getMassMatrixFS() const
+{
+    return mM_FS;
+}
+
 Eigen::MatrixXd Skeleton::getInvMassMatrix() const
 {
     return mMInv;
+}
+
+Eigen::MatrixXd Skeleton::getInvMassMatrixFS() const
+{
+    return mMInv_FS;
 }
 
 Eigen::MatrixXd Skeleton::getCoriolisMatrix() const
@@ -359,7 +372,7 @@ void Skeleton::computeInverseDynamicsLinear(const Eigen::Vector3d& _gravity,
     updateForwardKinematics();
 
     // Backward recursion
-    for (std::vector<dynamics::BodyNode*>::reverse_iterator ritrBody
+    for (std::vector<BodyNode*>::reverse_iterator ritrBody
          = mBodyNodes.rbegin();
          ritrBody != mBodyNodes.rend();
          ++ritrBody)
@@ -389,7 +402,7 @@ Eigen::VectorXd Skeleton::computeInverseDynamicsLinear(
     updateForwardKinematics();
 
     // Backward recursion
-    for (std::vector<dynamics::BodyNode*>::reverse_iterator ritrBody
+    for (std::vector<BodyNode*>::reverse_iterator ritrBody
          = mBodyNodes.rbegin();
          ritrBody != mBodyNodes.rend();
          ++ritrBody)
@@ -459,6 +472,8 @@ void Skeleton::computeEquationsOfMotionID(
     computeInverseDynamicsLinear(_gravity, true);
     mCg = get_tau();
 
+    static common::Timer timerM("M");
+    timerM.start();
     // Calcualtion mass matrix, M
     mM = Eigen::MatrixXd::Zero(n,n);
     for (int i = 0; i < getNumBodyNodes(); i++)
@@ -467,9 +482,13 @@ void Skeleton::computeEquationsOfMotionID(
         nodei->updateMassMatrix();
         nodei->aggregateMass(mM);
     }
+    timerM.stop();
 
+    static common::Timer timerMInv("matrix inversion");
+    timerMInv.start();
     // Inverse of mass matrix
     mMInv = mM.ldlt().solve(Eigen::MatrixXd::Identity(n,n));
+    timerMInv.start();
 
     // Restore the torque
     set_tau(tau_old);
@@ -501,40 +520,62 @@ void Skeleton::computeForwardDynamicsFS(
 
     // skip immobile objects in forward simulation
     if (getImmobileState() == true || n == 0)
-    {
         return;
-    }
 
     // Forward recursion
-    for (std::vector<dynamics::BodyNode*>::iterator itrBody = mBodyNodes.begin();
-         itrBody != mBodyNodes.end();
-         ++itrBody)
+    for (std::vector<BodyNode*>::iterator it = mBodyNodes.begin();
+         it != mBodyNodes.end(); ++it)
     {
-        (*itrBody)->updateTransform();
-        (*itrBody)->updateVelocity();
-        (*itrBody)->updateEta();
+        (*it)->updateTransform();
+        (*it)->updateVelocity();
+        (*it)->updateEta();
     }
+
+    static common::Timer timerMFS("M_FS");
+    timerMFS.start();
+    if (_equationsOfMotion)
+        mM_FS.setZero(n,n);
+    timerMFS.stop();
 
     // Backward recursion
-    for (std::vector<dynamics::BodyNode*>::reverse_iterator ritrBody
-         = mBodyNodes.rbegin();
-         ritrBody != mBodyNodes.rend();
-         ++ritrBody)
+    for (std::vector<BodyNode*>::reverse_iterator rit = mBodyNodes.rbegin();
+         rit != mBodyNodes.rend(); ++rit)
     {
-        (*ritrBody)->updateArticulatedInertia();
-        (*ritrBody)->updateBiasForce(_gravity);
-        (*ritrBody)->updatePsi();
-        (*ritrBody)->updatePi();
-        (*ritrBody)->updateBeta();
+        (*rit)->updateArticulatedInertia();
+        (*rit)->updateBiasForce(_gravity);
+        (*rit)->updatePsi();
+        (*rit)->updatePi();
+        (*rit)->updateBeta();
+
+        timerMFS.start();
+        if (_equationsOfMotion)
+            (*rit)->aggregateMassFS(mM_FS);
+        timerMFS.stop();
     }
 
-    for (std::vector<dynamics::BodyNode*>::iterator itrBody = mBodyNodes.begin();
-         itrBody != mBodyNodes.end();
-         ++itrBody)
+    static common::Timer timerMInvFS("MInv_FS");
+    timerMInvFS.start();
+    if (_equationsOfMotion)
+        mMInv_FS.setZero(n,n);
+    timerMInvFS.stop();
+
+    if (_equationsOfMotion)
     {
-        (*itrBody)->update_ddq();
-        (*itrBody)->updateAcceleration();
-        (*itrBody)->update_F_fs();
+        timerMInvFS.start();
+        for (int i = 0; i < mBodyNodes.size(); ++i)
+        {
+            BodyNode* bodyNode = mBodyNodes[i];
+            bodyNode->aggregateMassInverseFS(mMInv_FS, bodyNode);
+        }
+        timerMInvFS.stop();
+    }
+
+    for (std::vector<BodyNode*>::iterator it = mBodyNodes.begin();
+         it != mBodyNodes.end(); ++it)
+    {
+        (*it)->update_ddq();
+        (*it)->updateAcceleration();
+        (*it)->update_F_fs();
     }
 }
 

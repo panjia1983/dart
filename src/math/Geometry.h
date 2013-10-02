@@ -239,6 +239,12 @@ Eigen::Vector6d AdInvT(const Eigen::Isometry3d& T, const Eigen::Vector6d& V);
 Eigen::Vector6d AdInvRLinear(const Eigen::Isometry3d& T,
                              const Eigen::Vector3d& V);
 
+/// @brief
+Eigen::Matrix6d AdT(const Eigen::Isometry3d& _T);
+
+/// @brief
+Eigen::Matrix6d dAdT(const Eigen::Isometry3d& _T);
+
 /// @brief dual adjoint mapping
 /// @note @f$Ad^{@,*}_TF = ( R^T (m - p@times f)@,,~ R^T f)@f$,
 /// where @f$T=(R,p)@in SE(3), F=(m,f)@in se(3)^*@f$.

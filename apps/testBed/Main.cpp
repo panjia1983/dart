@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
     // create and initialize the world
     dart::simulation::World *myWorld
             = dart::utils::SkelParser::readSkelFile(
-                  //DART_DATA_PATH"/skel/test/single_pendulum.skel");
+                  DART_DATA_PATH"/skel/test/single_pendulum.skel");
                   //DART_DATA_PATH"/skel/test/double_pendulum.skel");
                   //DART_DATA_PATH"/skel/test/boxes.skel");
                   //DART_DATA_PATH"/skel/test/ball_joints.skel");
@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
                   //DART_DATA_PATH"/skel/test/gazebo/force_torque_test2.skel");
                   //DART_DATA_PATH"/skel/test/gazebo/force_torque_test.skel");
                   //DART_DATA_PATH"/skel/test/chainwhipa.skel");
-                  DART_DATA_PATH"/skel/test/double_pendulum_with_base.skel");
+                  //DART_DATA_PATH"/skel/test/double_pendulum_with_base.skel");
     assert(myWorld != NULL);
 
     // create a window and link it to the world

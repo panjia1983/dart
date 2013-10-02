@@ -1464,5 +1464,22 @@ Eigen::Matrix3d makeSkewSymmetric(const Eigen::Vector3d& v)
     return result;
 }
 
+Eigen::Matrix6d AdT(const Eigen::Isometry3d& _T)
+{
+    Eigen::Matrix6d res = Eigen::Matrix6d::Zero();
+
+    res.topLeftCorner<3,3>()     = _T.linear();
+    res.bottomRightCorner<3,3>() = _T.linear();
+    res.bottomLeftCorner<3,3>()  = makeSkewSymmetric(_T.translation()) *
+                                   _T.linear();
+
+    return res;
+}
+
+Eigen::Matrix6d dAdT(const Eigen::Isometry3d& _T)
+{
+    return AdT(_T).transpose();
+}
+
 } // namespace math
 } // namespace dart

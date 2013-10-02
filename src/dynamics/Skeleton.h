@@ -152,7 +152,13 @@ public:
     Eigen::MatrixXd getMassMatrix() const;
 
     /// @brief
+    Eigen::MatrixXd getMassMatrixFS() const;
+
+    /// @brief
     Eigen::MatrixXd getInvMassMatrix() const;
+
+    /// @brief
+    Eigen::MatrixXd getInvMassMatrixFS() const;
 
     /// @brief
     Eigen::MatrixXd getCoriolisMatrix() const;
@@ -321,8 +327,14 @@ protected:
     /// @brief Mass matrix for the skeleton.
     Eigen::MatrixXd mM;
 
+    /// @brief Mass matrix for the skeleton.
+    Eigen::MatrixXd mM_FS;
+
     /// @brief Inverse of mass matrix for the skeleton.
     Eigen::MatrixXd mMInv;
+
+    /// @brief Inverse of mass matrix for the skeleton.
+    Eigen::MatrixXd mMInv_FS;
 
     /// @brief Coriolis matrix for the skeleton; not being used currently
     Eigen::MatrixXd mC;
