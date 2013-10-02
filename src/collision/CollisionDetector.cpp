@@ -72,13 +72,13 @@ void CollisionDetector::addCollisionSkeletonNode(dynamics::BodyNode* _bodyNode,
     }
 }
 
-bool CollisionDetector::checkCollision(dynamics::BodyNode* _node1,
-                                       dynamics::BodyNode* _node2,
-                                       bool _calculateContactPoints)
+bool CollisionDetector::detectCollision(dynamics::BodyNode* _node1,
+                                        dynamics::BodyNode* _node2,
+                                        bool _calculateContactPoints)
 {
-    return checkCollision(getCollisionNode(_node1),
-                          getCollisionNode(_node2),
-                          _calculateContactPoints);
+    return detectCollision(getCollisionNode(_node1),
+                           getCollisionNode(_node2),
+                           _calculateContactPoints);
 }
 
 unsigned int CollisionDetector::getNumContacts()
@@ -131,7 +131,7 @@ bool CollisionDetector::isCollidable(const CollisionNode* _node1,
         && _node1->getBodyNode()->isCollidable()
         && _node2->getBodyNode()->isCollidable()
         && (_node1->getBodyNode()->getSkeleton() != _node2->getBodyNode()->getSkeleton()
-            || _node1->getBodyNode()->getSkeleton()->getSelfCollidable());
+            || _node1->getBodyNode()->getSkeleton()->isSelfCollidable());
 }
 
 std::vector<bool>::reference CollisionDetector::getPairCollidable(

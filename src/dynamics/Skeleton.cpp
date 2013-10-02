@@ -51,10 +51,13 @@ namespace dynamics {
 Skeleton::Skeleton(const std::string& _name)
     : GenCoordSystem(),
       mName(_name),
-      mSelfCollidable(false),
+      mIsSelfCollidable(false),
       mTotalMass(0.0),
-      mImmobile(false)
+      mIsMobile(true)
 {
+    for (std::vector<BodyNode*>::const_iterator it = mBodyNodes.begin();
+         it != mBodyNodes.end(); ++it)
+        delete (*it);
 }
 
 Skeleton::~Skeleton()
@@ -71,24 +74,24 @@ const std::string& Skeleton::getName() const
     return mName;
 }
 
-void Skeleton::setSelfCollidable(bool _selfCollidable)
+void Skeleton::setSelfCollidable(bool _isSelfCollidable)
 {
-    mSelfCollidable = _selfCollidable;
+    mIsSelfCollidable = _isSelfCollidable;
 }
 
-bool Skeleton::getSelfCollidable() const
+bool Skeleton::isSelfCollidable() const
 {
-    return mSelfCollidable;
+    return mIsSelfCollidable;
 }
 
-void Skeleton::setImmobileState(bool _immobile)
+void Skeleton::setMobile(bool _isMobile)
 {
-    mImmobile = _immobile;
+    mIsMobile = _isMobile;
 }
 
-bool Skeleton::getImmobileState() const
+bool Skeleton::isMobile() const
 {
-    return mImmobile;
+    return mIsMobile;
 }
 
 double Skeleton::getMass() const
@@ -96,9 +99,23 @@ double Skeleton::getMass() const
     return mTotalMass;
 }
 
-void Skeleton::initDynamics()
+void Skeleton::init()
 {
-    initKinematics();
+    mGenCoords.clear();
+
+    // Initialize body nodes
+    for(int i = 0; i < getNumBodyNodes(); i++)
+    {
+        Joint* joint = mBodyNodes[i]->getParentJoint();
+        for (int j = 0; j < joint->getNumGenCoords(); ++j)
+        {
+            joint->getGenCoord(j)->setSkeletonIndex(mGenCoords.size());
+            mGenCoords.push_back(joint->getGenCoord(j));
+        }
+        mBodyNodes[i]->init(this, i);
+    }
+
+    updateForwardKinematics();
 
     int DOF = getNumGenCoords();
 
@@ -127,17 +144,6 @@ void Skeleton::addBodyNode(BodyNode* _body)
     assert(_body && _body->getParentJoint());
 
     mBodyNodes.push_back(_body);
-    _body->setSkeletonIndex(mBodyNodes.size() - 1);
-
-    // Add parent joint
-    Joint* joint = _body->getParentJoint();
-    joint->setSkeletonIndex(mBodyNodes.size() - 1);
-
-    for (int i = 0; i < joint->getNumGenCoords(); ++i)
-    {
-        joint->getGenCoord(i)->setSkeletonIndex(mGenCoords.size());
-        mGenCoords.push_back(joint->getGenCoord(i));
-    }
 }
 
 int Skeleton::getNumBodyNodes() const
@@ -190,34 +196,18 @@ Joint* Skeleton::getJoint(const std::string& _name) const
     return NULL;
 }
 
-void Skeleton::addMarker(Marker* _h)
-{
-    mMarkers.push_back(_h);
-    _h->setSkeletonIndex(mMarkers.size()-1);
-    BodyNode *body = _h->getNode();
-    body->addMarker(_h);
-}
-
-int Skeleton::getNumMarkers() const
-{
-    return mMarkers.size();
-}
-
-Marker* Skeleton::getMarker(int _i)
-{
-    return mMarkers[_i];
-}
-
-Marker*Skeleton::getMarker(const std::string& _name) const
+Marker* Skeleton::getMarker(const std::string& _name) const
 {
     assert(!_name.empty());
 
-    for (std::vector<Marker*>::const_iterator itrMarker = mMarkers.begin();
-         itrMarker != mMarkers.end();
-         ++itrMarker)
+    for (std::vector<BodyNode*>::const_iterator it = mBodyNodes.begin();
+         it != mBodyNodes.end(); ++it)
     {
-        if ((*itrMarker)->getName() == _name)
-            return *itrMarker;
+        for (int i = 0; i < (*it)->getNumMarkers(); ++i)
+        {
+            if ((*it)->getMarker(i)->getName() == _name)
+                return (*it)->getMarker(i);
+        }
     }
 
     return NULL;
@@ -314,35 +304,20 @@ Eigen::VectorXd Skeleton::getInternalForces() const
     return get_tau();
 }
 
-void Skeleton::initKinematics()
-{
-    // init the dependsOnDof stucture for each bodylink
-    for(int i = 0; i < getNumBodyNodes(); i++)
-    {
-        mBodyNodes.at(i)->setSkeleton(this);
-        mBodyNodes.at(i)->setDependDofList();
-        mBodyNodes.at(i)->init();
-    }
-
-    updateForwardKinematics();
-}
-
 void Skeleton::updateForwardKinematics(bool _firstDerivative,
                                        bool _secondDerivative)
 {
     for (std::vector<BodyNode*>::iterator itrBody = mBodyNodes.begin();
          itrBody != mBodyNodes.end(); ++itrBody)
     {
-        (*itrBody)->getParentJoint()->updateTransform();
         (*itrBody)->updateTransform();
 
-        if (_firstDerivative)
-            (*itrBody)->getParentJoint()->updateVelocity();
+        if (_firstDerivative) {
             (*itrBody)->updateVelocity();
+        }
 
         if (_secondDerivative)
         {
-            (*itrBody)->getParentJoint()->updateAcceleration();
             (*itrBody)->updateEta();
             (*itrBody)->updateAcceleration();
         }
@@ -369,6 +344,11 @@ void Skeleton::computeInverseDynamicsLinear(const Eigen::Vector3d& _gravity,
                                       bool _withExternalForces,
                                       bool _withDampingForces)
 {
+    // Skip immobile or 0-dof skeleton
+    if (!isMobile() || getNumGenCoords() == 0)
+        return;
+
+    // Forward recursion
     updateForwardKinematics();
 
     // Backward recursion
@@ -391,7 +371,12 @@ Eigen::VectorXd Skeleton::computeInverseDynamicsLinear(
         bool _withExternalForces,
         bool _withDampingForces)
 {
+
     int n = getNumGenCoords();
+
+    // Skip immobile or 0-dof skeleton
+    if (!isMobile() == true || n == 0)
+        return get_tau();
 
     if (_qdot == NULL)
         set_dq(Eigen::VectorXd::Zero(n));
@@ -399,6 +384,7 @@ Eigen::VectorXd Skeleton::computeInverseDynamicsLinear(
     if (_qdotdot == NULL)
         set_ddq(Eigen::VectorXd::Zero(n));
 
+    // Forward recursion
     updateForwardKinematics();
 
     // Backward recursion
@@ -456,11 +442,9 @@ void Skeleton::computeEquationsOfMotionID(
 {
     int n = getNumGenCoords();
 
-    // skip immobile objects in forward simulation
-    if (getImmobileState() == true || n == 0)
-    {
+    // Skip immobile or 0-dof skeleton
+    if (!isMobile() == true || n == 0)
         return;
-    }
 
     // Save current tau
     Eigen::VectorXd tau_old = get_tau();
@@ -518,18 +502,11 @@ void Skeleton::computeForwardDynamicsFS(
 {
     int n = getNumGenCoords();
 
-    // skip immobile objects in forward simulation
-    if (getImmobileState() == true || n == 0)
+    // Skip immobile or 0-dof skeleton
+    if (!isMobile() == true || n == 0)
         return;
 
-    // Forward recursion
-    for (std::vector<BodyNode*>::iterator it = mBodyNodes.begin();
-         it != mBodyNodes.end(); ++it)
-    {
-        (*it)->updateTransform();
-        (*it)->updateVelocity();
-        (*it)->updateEta();
-    }
+    // We assume that updateForwardKinematics() is called before
 
     static common::Timer timerMFS("M_FS");
     timerMFS.start();
@@ -570,6 +547,7 @@ void Skeleton::computeForwardDynamicsFS(
         timerMInvFS.stop();
     }
 
+    // Forward recursion
     for (std::vector<BodyNode*>::iterator it = mBodyNodes.begin();
          it != mBodyNodes.end(); ++it)
     {

@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <Eigen/Dense>
+#include <Eigen/StdVector>
 // TinyXML-2 Library
 // http://www.grinninglizard.com/tinyxml2/index.html
 #include <tinyxml2.h>
@@ -41,6 +42,13 @@ public:
     static simulation::World* readSdfFile(const std::string& _filename);
 
 private:
+    struct SDFBodyNode
+    {
+        dynamics::BodyNode* bodyNode;
+        Eigen::Isometry3d initTransform;
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    };
+
     /// @brief
     static simulation::World* readWorld(tinyxml2::XMLElement* _worldElement);
 
@@ -55,7 +63,7 @@ private:
             simulation::World* _world);
 
     /// @brief
-    static dynamics::BodyNode* readBodyNode(
+    static SDFBodyNode readBodyNode(
             tinyxml2::XMLElement* _bodyNodeElement,
             dynamics::Skeleton* _skeleton,
             const Eigen::Isometry3d& _skeletonFrame);
@@ -67,7 +75,7 @@ private:
     /// @brief
     static dynamics::Joint* readJoint(
             tinyxml2::XMLElement* _jointElement,
-            const std::vector<dynamics::BodyNode*>& _bodies);
+            const std::vector<SDFBodyNode, Eigen::aligned_allocator<SDFBodyNode> >& _bodies);
 
     /// @brief
     static dynamics::PrismaticJoint* readPrismaticJoint(
@@ -96,6 +104,8 @@ private:
 
     static dart::dynamics::WeldJoint* readWeldJoint(
             tinyxml2::XMLElement* _jointElement);
+
+
 };
 
 } // namespace utils

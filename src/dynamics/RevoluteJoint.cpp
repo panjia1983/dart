@@ -35,6 +35,7 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "common/Console.h"
 #include "math/Geometry.h"
 #include "dynamics/BodyNode.h"
 #include "dynamics/RevoluteJoint.h"
@@ -44,11 +45,9 @@ namespace dynamics {
 
 RevoluteJoint::RevoluteJoint(const Eigen::Vector3d& axis,
                              const std::string& _name)
-    : Joint(_name),
+    : Joint(REVOLUTE, _name),
       mAxis(axis.normalized())
 {
-    mJointType = REVOLUTE;
-
     mGenCoords.push_back(&mCoordinate);
 
     mS = Eigen::Matrix<double,6,1>::Zero();
@@ -63,8 +62,7 @@ RevoluteJoint::~RevoluteJoint()
 
 void RevoluteJoint::setAxis(const Eigen::Vector3d& _axis)
 {
-    assert(_axis.norm() == 1);
-    mAxis = _axis;
+    mAxis = _axis.normalized();
 }
 
 const Eigen::Vector3d&RevoluteJoint::getAxis() const
@@ -74,7 +72,6 @@ const Eigen::Vector3d&RevoluteJoint::getAxis() const
 
 void RevoluteJoint::updateTransform()
 {
-    // T
     mT = mT_ParentBodyToJoint
          * math::expAngular(mAxis * mCoordinate.get_q())
          * mT_ChildBodyToJoint.inverse();
@@ -82,23 +79,14 @@ void RevoluteJoint::updateTransform()
     assert(math::verifyTransform(mT));
 }
 
-void RevoluteJoint::updateVelocity()
+void RevoluteJoint::updateJacobian()
 {
-    // S
     mS = math::AdTAngular(mT_ChildBodyToJoint, mAxis);
-
-    // V = S * dq
-    mV = mS * get_dq();
-    //mV.setAngular(mAxis * mCoordinate.get_q());
 }
 
-void RevoluteJoint::updateAcceleration()
+void RevoluteJoint::updateJacobianTimeDeriv()
 {
-    // dS = 0
-    mdS.setZero();
-
-    // dV = dS * dq + S * ddq
-    mdV = mS * get_ddq();
+    //mdS.setZero();
 }
 
 } // namespace dynamics

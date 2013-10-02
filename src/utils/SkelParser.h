@@ -38,7 +38,7 @@
 #ifndef DART_UTILS_SKEL_PARSER_H
 #define DART_UTILS_SKEL_PARSER_H
 
-#include <vector>
+#include <Eigen/StdVector>
 #include <Eigen/Dense>
 // TinyXML-2 Library
 // http://www.grinninglizard.com/tinyxml2/index.html
@@ -81,6 +81,13 @@ public:
     static simulation::World* readSkelFile(const std::string& _filename);
 
 private:
+    struct SkelBodyNode
+    {
+        dynamics::BodyNode* bodyNode;
+        Eigen::Isometry3d initTransform;
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    };
+
     /// @brief
     static simulation::World* readWorld(tinyxml2::XMLElement* _worldElement);
 
@@ -90,7 +97,7 @@ private:
             simulation::World* _world);
 
     /// @brief
-    static dynamics::BodyNode* readBodyNode(
+    static SkelBodyNode readBodyNode(
             tinyxml2::XMLElement* _bodyElement,
             dynamics::Skeleton* _skeleton,
             const Eigen::Isometry3d& _skeletonFrame);
@@ -102,7 +109,7 @@ private:
     /// @brief
     static dynamics::Joint* readJoint(
             tinyxml2::XMLElement* _jointElement,
-            const std::vector<dynamics::BodyNode*>& _bodies);
+            const std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >& _bodies);
 
     /// @brief
     static dynamics::PrismaticJoint* readPrismaticJoint(

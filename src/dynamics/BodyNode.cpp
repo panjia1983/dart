@@ -57,8 +57,8 @@ int BodyNode::msBodyNodeCount = 0;
 BodyNode::BodyNode(const std::string& _name)
     : mSkelIndex(-1),
       mName(_name),
-      mCollidable(true),
-      mColliding(false),
+      mIsCollidable(true),
+      mIsColliding(false),
       mSkeleton(NULL),
       mParentJoint(NULL),
       mParentBodyNode(NULL),
@@ -89,11 +89,21 @@ BodyNode::BodyNode(const std::string& _name)
 
 BodyNode::~BodyNode()
 {
-    for(int i = 0; i < mVizShapes.size(); i++)
-        delete mVizShapes[i];
-    for(int i = 0; i < mColShapes.size(); i++)
-        if(mColShapes[i] != mVizShapes[i])
-            delete mColShapes[i];
+    for (std::vector<Shape*>::const_iterator it = mVizShapes.begin();
+         it != mVizShapes.end(); ++it)
+        delete (*it);
+
+    for (std::vector<Shape*>::const_iterator itColShape = mColShapes.begin();
+         itColShape != mColShapes.end(); ++itColShape)
+        if (mVizShapes.end() == find(mVizShapes.begin(), mVizShapes.end(), *itColShape))
+            delete (*itColShape);
+
+    for (std::vector<Marker*>::const_iterator it = mMarkers.begin();
+         it != mMarkers.end(); ++it)
+        delete (*it);
+
+    if (mParentJoint)
+        delete mParentJoint;
 }
 
 void BodyNode::setName(const std::string& _name)
@@ -106,9 +116,9 @@ const std::string& BodyNode::getName() const
     return mName;
 }
 
-void BodyNode::setGravityMode(bool _onoff)
+void BodyNode::setGravityMode(bool _gravityMode)
 {
-    mGravityMode = _onoff;
+    mGravityMode = _gravityMode;
 }
 
 bool BodyNode::getGravityMode() const
@@ -118,12 +128,12 @@ bool BodyNode::getGravityMode() const
 
 bool BodyNode::isCollidable() const
 {
-    return mCollidable;
+    return mIsCollidable;
 }
 
-void BodyNode::setCollidability(bool _c)
+void BodyNode::setCollidable(bool _isCollidable)
 {
-    mCollidable = _c;
+    mIsCollidable = _isCollidable;
 }
 
 void BodyNode::setMass(double _mass)
@@ -178,41 +188,11 @@ Marker* BodyNode::getMarker(int _idx) const
     return mMarkers[_idx];
 }
 
-void BodyNode::setDependDofList()
-{
-    mDependentDofIndexes.clear();
-
-    if (mParentBodyNode != NULL)
-    {
-        mDependentDofIndexes.insert(mDependentDofIndexes.end(),
-                              mParentBodyNode->mDependentDofIndexes.begin(),
-                              mParentBodyNode->mDependentDofIndexes.end());
-    }
-
-    for (int i = 0; i < mParentJoint->getNumGenCoords(); i++)
-    {
-        int dofID = mParentJoint->getGenCoord(i)->getSkeletonIndex();
-        mDependentDofIndexes.push_back(dofID);
-    }
-
-#ifndef NDEBUG
-    for (int i = 0; i < (int)mDependentDofIndexes.size() - 1; i++)
-    {
-        for (int j = i + 1; j < mDependentDofIndexes.size(); j++)
-            if (mDependentDofIndexes[i] == mDependentDofIndexes[j])
-            {
-                dterr << "Skeleton ID of Generalized coordinates is duplicated."
-                      << std::endl;
-            }
-    }
-#endif
-}
-
-bool BodyNode::dependsOn(int _dofIndex) const
+bool BodyNode::dependsOn(int _genCoordIndex) const
 {
     return binary_search(mDependentDofIndexes.begin(),
                          mDependentDofIndexes.end(),
-                         _dofIndex);
+                         _genCoordIndex);
 }
 
 int BodyNode::getNumDependentDofs() const
@@ -225,26 +205,9 @@ int BodyNode::getDependentDof(int _arrayIndex) const
     return mDependentDofIndexes[_arrayIndex];
 }
 
-void BodyNode::setWorldTransform(const Eigen::Isometry3d &_W)
-{
-    assert(math::verifyTransform(_W));
-
-    mW = _W;
-}
-
 const Eigen::Isometry3d& BodyNode::getWorldTransform() const
 {
     return mW;
-}
-
-Eigen::Isometry3d BodyNode::getWorldInvTransform() const
-{
-    return mW.inverse();
-}
-
-Eigen::Vector3d BodyNode::evalWorldPos(const Eigen::Vector3d& _lp) const
-{
-    return mW * _lp;
 }
 
 const Eigen::Vector6d& BodyNode::getBodyVelocity() const
@@ -252,30 +215,11 @@ const Eigen::Vector6d& BodyNode::getBodyVelocity() const
     return mV;
 }
 
-Eigen::Vector6d BodyNode::getWorldVelocity() const
+Eigen::Vector6d BodyNode::getWorldVelocity(const Eigen::Vector3d& _offset) const
 {
-    return math::AdR(mW, mV);
-}
-
-Eigen::Vector6d BodyNode::getWorldVelocityAtCOM() const
-{
-    Eigen::Isometry3d worldFrameAtCOG = mW;
-    worldFrameAtCOG.translation() = mW.linear() * -mCenterOfMass;
-    return math::AdT(worldFrameAtCOG, mV);
-}
-
-Eigen::Vector6d BodyNode::getWorldVelocityAtPoint(const Eigen::Vector3d& _pointBody) const
-{
-    Eigen::Isometry3d worldFrameAtPoint = mW;
-    worldFrameAtPoint.translation() = mW.linear() *  -_pointBody;
-    return math::AdT(worldFrameAtPoint, mV);
-}
-
-Eigen::Vector6d BodyNode::getWorldVelocityAtFrame(const Eigen::Isometry3d& _T) const
-{
-    assert(math::verifyTransform(_T));
-
-    return math::AdT(_T.inverse() * mW, mV);
+    Eigen::Isometry3d T = mW;
+    T.translation() = -_offset;
+    return math::AdT(T, mV);
 }
 
 const Eigen::Vector6d&BodyNode::getBodyAcceleration() const
@@ -283,30 +227,12 @@ const Eigen::Vector6d&BodyNode::getBodyAcceleration() const
     return mdV;
 }
 
-Eigen::Vector6d BodyNode::getWorldAcceleration() const
+Eigen::Vector6d BodyNode::getWorldAcceleration(
+        const Eigen::Vector3d& _offset) const
 {
-    return math::AdR(mW, mdV);
-}
-
-Eigen::Vector6d BodyNode::getWorldAccelerationAtCOM() const
-{
-    Eigen::Isometry3d worldFrameAtCOG = mW;
-    worldFrameAtCOG.translation() = mW.linear() * -mCenterOfMass;
-    return math::AdT(worldFrameAtCOG, mdV);
-}
-
-Eigen::Vector6d BodyNode::getWorldAccelerationAtPoint(const Eigen::Vector3d& _point) const
-{
-    Eigen::Isometry3d worldFrameAtPoint = mW;
-    worldFrameAtPoint.translation() = mW.linear() * _point;
-    return math::AdT(worldFrameAtPoint, mdV);
-}
-
-Eigen::Vector6d BodyNode::getWorldAccelerationAtFrame(const Eigen::Isometry3d& _T) const
-{
-    assert(math::verifyTransform(_T));
-
-    return math::AdT(_T.inverse() * mW, mdV);
+    Eigen::Isometry3d T = mW;
+    T.translation() = -_offset;
+    return math::AdT(T, mdV);
 }
 
 const math::Jacobian&BodyNode::getBodyJacobian() const
@@ -314,79 +240,67 @@ const math::Jacobian&BodyNode::getBodyJacobian() const
     return mBodyJacobian;
 }
 
-math::Jacobian BodyNode::getWorldJacobian() const
+math::Jacobian BodyNode::getWorldJacobian(const Eigen::Vector3d& _offset) const
 {
-    return math::AdR(mW, mBodyJacobian);
+    Eigen::Isometry3d T = mW;
+    T.translation() = -_offset;
+    return math::AdTJac(T, mBodyJacobian);
 }
 
-math::Jacobian BodyNode::getWorldJacobianAtPoint(const Eigen::Vector3d& _point) const
+const math::Jacobian& BodyNode::getBodyJacobianTimeDeriv() const
 {
-    //--------------------------------------------------------------------------
-    // Jb                : body jacobian
-    //
-    // X = | I r_world | : frame whose origin is at contact point
-    //     | 0       1 |
-    //
-    // X^{-1} = | I -r_world |
-    //          | 0        1 |
-    //
-    // W = | R p |       : body frame
-    //     | 0 1 |
-    //
-    // body_jacobian_at_contact_point = Ad(X^{-1} * W, Jb)
-    //--------------------------------------------------------------------------
-    return math::AdTJac(Eigen::Translation3d(-_point) * mW, mBodyJacobian);
+    return mBodyJacobianTimeDeriv;
 }
 
-Eigen::MatrixXd BodyNode::getWorldJacobianAtPoint_LinearPartOnly(
-        const Eigen::Vector3d& r_world) const
+math::Jacobian BodyNode::getWorldJacobianTimeDeriv(
+        const Eigen::Vector3d& _offset) const
 {
-    //--------------------------------------------------------------------------
-    // Jb                : body jacobian
-    //
-    // X = | I r_world | : frame whose origin is at contact point
-    //     | 0       1 |
-    //
-    // X^{-1} = | I -r_world |
-    //          | 0        1 |
-    //
-    // W = | R p |       : body frame
-    //     | 0 1 |
-    //
-    // body_jacobian_at_contact_point = Ad(X^{-1} * W, Jb)
-    //--------------------------------------------------------------------------
-
-    // TODO: Speed up here.
-    Eigen::MatrixXd JcLinear = Eigen::MatrixXd::Zero(3, getNumDependentDofs());
-
-    JcLinear = getWorldJacobianAtPoint(r_world).bottomLeftCorner(3,getNumDependentDofs());
-
-    return JcLinear;
+    Eigen::Isometry3d T = mW;
+    T.translation() = -_offset;
+    return math::AdTJac(T, mBodyJacobianTimeDeriv);
 }
 
-const math::Jacobian& BodyNode::getBodyJacobianDeriv() const
+void BodyNode::setColliding(bool _isColliding)
 {
-    return mBodyJacobianDeriv;
+    mIsColliding = _isColliding;
 }
 
-void BodyNode::setColliding(bool _colliding)
+bool BodyNode::isColliding()
 {
-    mColliding = _colliding;
+    return mIsColliding;
 }
 
-bool BodyNode::getColliding()
+void BodyNode::init(Skeleton* _skeleton, int _skeletonIndex)
 {
-    return mColliding;
-}
+    assert(_skeleton);
 
-void BodyNode::init()
-{
-    assert(mSkeleton != NULL);
+    mSkeleton = _skeleton;
+    mSkelIndex = _skeletonIndex;
+    mParentJoint->mSkelIndex = _skeletonIndex;
+
+    // fill list of generalized coordinates this node depends on
+    if (mParentBodyNode)
+        mDependentDofIndexes = mParentBodyNode->mDependentDofIndexes;
+    else
+        mDependentDofIndexes.clear();
+    for (int i = 0; i < mParentJoint->getNumGenCoords(); i++)
+        mDependentDofIndexes.push_back(mParentJoint->getGenCoord(i)->getSkeletonIndex());
+
+#ifndef NDEBUG
+    for (int i = 0; i < (int)mDependentDofIndexes.size() - 1; i++)
+    {
+        for (int j = i + 1; j < mDependentDofIndexes.size(); j++)
+            if (mDependentDofIndexes[i] == mDependentDofIndexes[j])
+            {
+                dterr << "Skeleton ID of Generalized coordinates is duplicated."
+                      << std::endl;
+            }
+    }
+#endif
 
     const int numDepDofs = getNumDependentDofs();
-
     mBodyJacobian      = math::Jacobian::Zero(6,numDepDofs);
-    mBodyJacobianDeriv = math::Jacobian::Zero(6,numDepDofs);
+    mBodyJacobianTimeDeriv = math::Jacobian::Zero(6,numDepDofs);
     mM                 = Eigen::MatrixXd::Zero(numDepDofs, numDepDofs);
 }
 
@@ -444,6 +358,8 @@ void BodyNode::drawMarkers(renderer::RenderInterface* _ri,
 
 void BodyNode::updateTransform()
 {
+    mParentJoint->updateTransform();
+
     if (mParentBodyNode)
     {
         mW = mParentBodyNode->getWorldTransform()
@@ -465,15 +381,20 @@ void BodyNode::updateVelocity(bool _updateJacobian)
     // V(i) = Ad(T(i, i-1), V(i-1)) + S * dq
     //--------------------------------------------------------------------------
 
-    if (mParentBodyNode)
+    mParentJoint->updateJacobian();
+
+    if (mParentJoint->getNumGenCoords() > 0)
     {
-        mV = math::AdInvT(mParentJoint->getLocalTransform(),
-                          mParentBodyNode->getBodyVelocity()) +
-                mParentJoint->getLocalVelocity();
-    }
-    else
-    {
-        mV = mParentJoint->getLocalVelocity();
+        if (mParentBodyNode)
+        {
+            mV = math::AdInvT(mParentJoint->getLocalTransform(),
+                              mParentBodyNode->getBodyVelocity()) +
+                    mParentJoint->getLocalJacobian() * mParentJoint->get_dq();
+        }
+        else
+        {
+            mV = mParentJoint->getLocalJacobian() * mParentJoint->get_dq();
+        }
     }
 
     assert(!math::isNan(mV));
@@ -521,11 +442,13 @@ void BodyNode::updateVelocity(bool _updateJacobian)
 
 void BodyNode::updateEta()
 {
+    mParentJoint->updateJacobianTimeDeriv();
+
     if (mParentJoint->getNumGenCoords() > 0)
     {
         mEta = math::ad(mV, mParentJoint->getLocalJacobian() *
                             mParentJoint->get_dq()) +
-                            mParentJoint->getLocalJacobianFirstDerivative() *
+                            mParentJoint->getLocalJacobianTimeDeriv() *
                             mParentJoint->get_dq();
 
         assert(!math::isNan(mEta));
@@ -580,23 +503,23 @@ void BodyNode::updateAcceleration(bool _updateJacobianDeriv)
     // Parent Jacobian
     if (mParentBodyNode != NULL)
     {
-        assert(mParentBodyNode->mBodyJacobianDeriv.cols() + mParentJoint->getNumGenCoords()
-               == mBodyJacobianDeriv.cols());
+        assert(mParentBodyNode->mBodyJacobianTimeDeriv.cols() + mParentJoint->getNumGenCoords()
+               == mBodyJacobianTimeDeriv.cols());
 
         for (int i = 0; i < numParentDOFs; ++i)
         {
             assert(mParentJoint);
             Eigen::Vector6d dJi = math::AdInvT(mParentJoint->getLocalTransform(),
-                                         mParentBodyNode->mBodyJacobianDeriv.col(i));
-            mBodyJacobianDeriv.col(i) = dJi;
+                                         mParentBodyNode->mBodyJacobianTimeDeriv.col(i));
+            mBodyJacobianTimeDeriv.col(i) = dJi;
         }
     }
 
     // Local Jacobian
     for(int i = 0; i < numLocalDOFs; i++)
     {
-        mBodyJacobianDeriv.col(numParentDOFs + i) =
-                mParentJoint->getLocalJacobianFirstDerivative().col(i);
+        mBodyJacobianTimeDeriv.col(numParentDOFs + i) =
+                mParentJoint->getLocalJacobianTimeDeriv().col(i);
     }
 }
 
@@ -632,17 +555,12 @@ const Eigen::Vector3d& BodyNode::getLocalCOM() const
 
 Eigen::Vector3d BodyNode::getWorldCOM() const
 {
-    return evalWorldPos(mCenterOfMass);
+    return mW * mCenterOfMass;
 }
 
 Eigen::Matrix6d BodyNode::getInertia() const
 {
     return mI;
-}
-
-void BodyNode::setSkeletonIndex(int _idx)
-{
-    mSkelIndex = _idx;
 }
 
 int BodyNode::getSkeletonIndex() const
@@ -680,11 +598,6 @@ Shape*BodyNode::getCollisionShape(int _idx) const
     return mColShapes[_idx];
 }
 
-void BodyNode::setSkeleton(Skeleton* _skel)
-{
-    mSkeleton = _skel;
-}
-
 Skeleton*BodyNode::getSkeleton() const
 {
     return mSkeleton;
@@ -710,7 +623,7 @@ void BodyNode::addExtForce(const Eigen::Vector3d& _offset,
     if (_isOffsetLocal)
         T.translation() = _offset;
     else
-        T.translation() = getWorldInvTransform() * _offset;
+        T.translation() = getWorldTransform().inverse() * _offset;
 
     if (_isForceLocal)
         F.tail<3>() = _force;
@@ -730,7 +643,7 @@ void BodyNode::setExtForce(const Eigen::Vector3d& _offset,
     if (_isOffsetLocal)
         T.translation() = _offset;
     else
-        T.translation() = getWorldInvTransform() * _offset;
+        T.translation() = getWorldTransform().inverse() * _offset;
 
     if (_isForceLocal)
         F.tail<3>() = _force;
@@ -808,11 +721,9 @@ void BodyNode::updateBodyForce(const Eigen::Vector3d& _gravity,
     {
         dynamics::Joint* childJoint = (*iChildBody)->getParentJoint();
         assert(childJoint != NULL);
-        BodyNode* bodyDyn = dynamic_cast<BodyNode*>(*iChildBody);
-        assert(bodyDyn != NULL);
 
         mF += math::dAdInvT(childJoint->getLocalTransform(),
-                            bodyDyn->getBodyForce());
+                            (*iChildBody)->getBodyForce());
     }
 
     assert(!math::isNan(mF));

@@ -46,10 +46,8 @@ namespace dynamics {
 UniversalJoint::UniversalJoint(const Eigen::Vector3d& _axis0,
                                const Eigen::Vector3d& _axis1,
                                const std::string& _name)
-    : Joint(_name)
+    : Joint(UNIVERSAL, _name)
 {
-    mJointType = UNIVERSAL;
-
     mGenCoords.push_back(&mCoordinate[0]);
     mGenCoords.push_back(&mCoordinate[1]);
 
@@ -68,14 +66,12 @@ UniversalJoint::~UniversalJoint()
 
 void UniversalJoint::setAxis1(const Eigen::Vector3d& _axis)
 {
-    assert(_axis.norm() == 1);
-    mAxis[0] = _axis;
+    mAxis[0] = _axis.normalized();
 }
 
 void UniversalJoint::setAxis2(const Eigen::Vector3d& _axis)
 {
-    assert(_axis.norm() == 1);
-    mAxis[1] = _axis;
+    mAxis[1] = _axis.normalized();
 }
 
 const Eigen::Vector3d& UniversalJoint::getAxis1() const
@@ -90,31 +86,22 @@ const Eigen::Vector3d& UniversalJoint::getAxis2() const
 
 inline void UniversalJoint::updateTransform()
 {
-    // T
     mT = mT_ParentBodyToJoint *
          math::expAngular(mAxis[0] * mCoordinate[0].get_q()) *
          math::expAngular(mAxis[1] * mCoordinate[1].get_q()) *
          mT_ChildBodyToJoint.inverse();
 }
 
-inline void UniversalJoint::updateVelocity()
+inline void UniversalJoint::updateJacobian()
 {
-    // S
     mS.col(0) = math::AdTAngular(mT_ChildBodyToJoint*math::expAngular(-mAxis[1]*mCoordinate[1].get_q()), mAxis[0]);
     mS.col(1) = math::AdTAngular(mT_ChildBodyToJoint, mAxis[1]);
-
-    // V = S * dq
-    mV = mS * get_dq();
 }
 
-inline void UniversalJoint::updateAcceleration()
+inline void UniversalJoint::updateJacobianTimeDeriv()
 {
-    // dS
     mdS.col(0) = -math::ad(mS.col(1)*mCoordinate[1].get_dq(), math::AdTAngular(mT_ChildBodyToJoint * math::expAngular(-mAxis[1]*mCoordinate[1].get_q()), mAxis[0]));
     //mdS.col(1) = setZero();
-
-    // dV = dS * dq + S * ddq
-    mdV = mdS * get_dq() + mS * get_ddq();
 }
 
 } // namespace dynamics

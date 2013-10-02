@@ -43,18 +43,14 @@
 namespace dart {
 namespace dynamics {
 
-Joint::Joint(const std::string& _name)
+Joint::Joint(JointType type, const std::string& _name)
     : mName(_name),
       mSkelIndex(-1),
-      mJointType(UNKNOWN),
+      mJointType(type),
       mIsPositionLimited(true),
       mT_ParentBodyToJoint(Eigen::Isometry3d::Identity()),
       mT_ChildBodyToJoint(Eigen::Isometry3d::Identity()),
-      mT(Eigen::Isometry3d::Identity()),
-      mV(Eigen::Vector6d::Zero()),
-      mS(math::Jacobian::Zero(6,0)),
-      mdV(Eigen::Vector6d::Zero()),
-      mdS(math::Jacobian::Zero(6,0))
+      mT(Eigen::Isometry3d::Identity())
 {
 }
 
@@ -87,28 +83,15 @@ const math::Jacobian&Joint::getLocalJacobian() const
     return mS;
 }
 
-const Eigen::Vector6d&Joint::getLocalVelocity() const
-{
-    return mV;
-}
-
-const math::Jacobian&Joint::getLocalJacobianFirstDerivative() const
+const math::Jacobian&Joint::getLocalJacobianTimeDeriv() const
 {
     return mdS;
 }
 
-const Eigen::Vector6d&Joint::getLocalAcceleration() const
+bool Joint::contains(const GenCoord* _genCoord) const
 {
-    return mdV;
-}
-
-bool Joint::isPresent(const GenCoord* _q) const
-{
-    for (unsigned int i = 0; i < getNumGenCoords(); i++)
-        if (_q == mGenCoords[i])
-            return true;
-
-    return false;
+    return find(mGenCoords.begin(), mGenCoords.end(), _genCoord) !=
+            mGenCoords.end() ? true : false;
 }
 
 int Joint::getGenCoordLocalIndex(int _dofSkelIndex) const
@@ -120,19 +103,14 @@ int Joint::getGenCoordLocalIndex(int _dofSkelIndex) const
     return -1;
 }
 
-void Joint::setPositionLimited(bool _positionLimit)
+void Joint::setPositionLimited(bool _isPositionLimited)
 {
-    mIsPositionLimited = _positionLimit;
+    mIsPositionLimited = _isPositionLimited;
 }
 
 bool Joint::isPositionLimited() const
 {
     return mIsPositionLimited;
-}
-
-void Joint::setSkeletonIndex(int _idx)
-{
-    mSkelIndex= _idx;
 }
 
 int Joint::getSkeletonIndex() const

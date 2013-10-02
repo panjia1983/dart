@@ -2,8 +2,8 @@
  * Copyright (c) 2011, Georgia Tech Research Corporation
  * All rights reserved.
  *
- * Author(s): Kristin Siu <kasiu@gatech.edu>
- * Date: 09/16/2011
+ * Author(s): Jeongseok Lee <jslee02@gmail.com>
+ * Date: 09/13/2013
  *
  * Geoorgia Tech Graphics Lab and Humanoid Robotics Lab
  *
@@ -35,33 +35,39 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DART_INTEGRATION_RK4_INTEGRATOR_H
-#define DART_INTEGRATION_RK4_INTEGRATOR_H
+#ifndef DART_COLLISION_DART_CONLLISION_DETECTOR_H
+#define DART_COLLISION_DART_CONLLISION_DETECTOR_H
 
-#include "integration/Integrator.h"
+#include "collision/CollisionDetector.h"
 
 namespace dart {
-namespace integration {
+namespace collision {
 
 /// @brief
-class RK4Integrator : public Integrator
+class DARTCollisionDetector : public CollisionDetector
 {
 public:
-    /// @brief Default constructor.
-    RK4Integrator() {}
+    /// @brief Default constructor
+    DARTCollisionDetector();
 
-    /// @brief Default destructor.
-    virtual ~RK4Integrator() {}
+    /// @brief Default destructor
+    virtual ~DARTCollisionDetector();
 
-    // Documentation inherited.
-    virtual void integrate(IntegrableSystem* system, double dt) const;
+    // Documentation inherited
+    virtual CollisionNode* createCollisionNode(dynamics::BodyNode* _bodyNode);
 
-private:
-    /// @brief Weights.
-    mutable Eigen::VectorXd k1, k2, k3, k4;
+    // Documentation inherited
+    virtual bool detectCollision(bool _checkAllCollisions,
+                                bool _calculateContactPoints);
+
+protected:
+    // Documentation inherited
+    virtual bool detectCollision(CollisionNode* _collNode1,
+                                CollisionNode* _collNode2,
+                                bool _calculateContactPoints);
 };
 
-} // namespace integration
+} // namespace collision
 } // namespace dart
 
-#endif // #ifndef DART_INTEGRATION_RK4_INTEGRATOR_H
+#endif // #ifndef DART_COLLISION_FCL_CONLLISION_DETECTOR_H

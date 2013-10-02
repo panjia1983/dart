@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Author(s): Jeongseok Lee <jslee02@gmail.com>
- * Date: 08/22/2013
+ * Date: 09/13/2013
  *
  * Geoorgia Tech Graphics Lab and Humanoid Robotics Lab
  *
@@ -35,67 +35,49 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DART_DYNAMICS_UNIVERSAL_JOINT_H
-#define DART_DYNAMICS_UNIVERSAL_JOINT_H
+#ifndef DART_COLLISION_DART_COLLIDE_H
+#define DART_COLLISION_DART_COLLIDE_H
+
+#include <vector>
 
 #include <Eigen/Dense>
 
-#include "dynamics/GenCoord.h"
-#include "dynamics/Joint.h"
+#include "collision/CollisionDetector.h"
 
 namespace dart {
-namespace dynamics {
+namespace dynamics { class Shape; }
+namespace collision {
 
-class UniversalJoint : public Joint
-{
-public:
-    /// @brief
-    UniversalJoint(const Eigen::Vector3d& _axis0 = Eigen::Vector3d(1.0, 0.0, 0.0),
-                   const Eigen::Vector3d& _axis1 = Eigen::Vector3d(0.0, 1.0, 0.0),
-                   const std::string& _name = "Universal joint");
+int collide(const dynamics::Shape* _shape0, const Eigen::Isometry3d& _T0,
+            const dynamics::Shape* _shape1, const Eigen::Isometry3d& _T1,
+            std::vector<Contact>& _result);
 
-    /// @brief
-    virtual ~UniversalJoint();
+int collideBoxBox(const Eigen::Vector3d& size0, const Eigen::Isometry3d& T0,
+                  const Eigen::Vector3d& size1, const Eigen::Isometry3d& T1,
+                  std::vector<Contact>& result);
 
-    /// @brief
-    void setAxis1(const Eigen::Vector3d& _axis);
+int	collideBoxSphere(const Eigen::Vector3d& size0, const Eigen::Isometry3d& T0,
+                     const double& r1, const Eigen::Isometry3d& T1,
+                     std::vector<Contact>& result);
 
-    /// @brief
-    void setAxis2(const Eigen::Vector3d& _axis);
+int collideSphereBox(const double& r0, const Eigen::Isometry3d& T0,
+                     const Eigen::Vector3d& size1, const Eigen::Isometry3d& T1,
+                     std::vector<Contact>& result);
 
-    /// @brief
-    const Eigen::Vector3d& getAxis1() const;
+int collideSphereSphere(const double& _r0, const Eigen::Isometry3d& c0,
+                        const double& _r1, const Eigen::Isometry3d& c1,
+                        std::vector<Contact>& result);
 
-    /// @brief
-    const Eigen::Vector3d& getAxis2() const;
+int collideCylinderSphere(
+        const double& cyl_rad, const double& half_height, const Eigen::Isometry3d& T0,
+        const double& sphere_rad, const Eigen::Isometry3d& T1,
+        std::vector<Contact>& result);
 
-    // Documentation is inherited.
-    virtual double getPotentialEnergy() const { return 0.0; }
+int collideCylinderPlane(const double& cyl_rad, const double& half_height, const Eigen::Isometry3d& T0,
+        const Eigen::Vector3d& plane_normal, const Eigen::Isometry3d& T1,
+        std::vector<Contact>& result);
 
-    // Document inherited.
-    virtual void updateTransform();
-
-    // Document inherited.
-    virtual void updateJacobian();
-
-    // Document inherited.
-    virtual void updateJacobianTimeDeriv();
-
-protected:
-    /// @brief Euler angles X, Y, Z
-    GenCoord mCoordinate[2];
-
-    /// @brief Rotational axis.
-    Eigen::Vector3d mAxis[2];
-
-private:
-
-public:
-    //
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};
-
-} // namespace dynamics
+} // namespace collision
 } // namespace dart
 
-#endif // #ifndef DART_DYNAMICS_UNIVERSAL_JOINT_H
+#endif // #ifndef DART_COLLISION_DART_COLLIDE_H

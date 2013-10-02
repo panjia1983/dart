@@ -40,18 +40,12 @@
 #define DART_DYNAMICS_SKELETON_H
 
 #include <vector>
-
 #include <Eigen/Dense>
-
 #include "math/Geometry.h"
 #include "dynamics/GenCoordSystem.h"
 
 namespace dart {
-
-namespace renderer {
-class RenderInterface;
-}
-
+namespace renderer { class RenderInterface; }
 namespace dynamics {
 
 class BodyNode;
@@ -66,7 +60,7 @@ public:
     // Constructor and Destructor
     //--------------------------------------------------------------------------
     /// @brief Constructor
-    Skeleton(const std::string& _name = "");
+    Skeleton(const std::string& _name = "Skeleton");
 
     /// @brief Destructor
     virtual ~Skeleton();
@@ -80,17 +74,23 @@ public:
     /// @brief
     const std::string& getName() const;
 
-    /// @brief
-    void setSelfCollidable(bool _selfCollidable);
+    /// @brief Set whether this skeleton allows self collisions between body
+    ///        nodes in this skeleton.
+    /// @param[in] _isSelfCollidable True if self collision is allowed.
+    void setSelfCollidable(bool _isSelfCollidable);
 
-    /// @brief
-    bool getSelfCollidable() const;
+    /// @brief Get whether this skeleton allows self collisions between body
+    ///        nodes in this skeleton.
+    /// @return True if self collision is allowed.
+    bool isSelfCollidable() const;
 
-    /// @brief
-    void setImmobileState(bool _immobile);
+    /// @brief Set whether this skeleton will be updated by forward dynamics.
+    /// @param[in] _isMobile True if this skeleton is mobile.
+    void setMobile(bool _isMobile);
 
-    /// @brief
-    bool getImmobileState() const;
+    /// @brief Get whether this skeleton will be updated by forward dynamics.
+    /// @return True if this skeleton is mobile.
+    bool isMobile() const;
 
     /// @brief
     double getMass() const;
@@ -120,19 +120,13 @@ public:
     Joint* getJoint(const std::string& _name) const;
 
     /// @brief
-    void addMarker(Marker *_h);
-
-    /// @brief
-    int getNumMarkers() const;
-
-    /// @brief
     Marker* getMarker(int _i);
 
     /// @brief
     Marker* getMarker(const std::string& _name) const;
 
     //--------------------------------------------------------------------------
-    // Properties updated by dynamics (kinematics)
+    // Properties updated by dynamics
     //--------------------------------------------------------------------------
     /// @brief
     void setConfig(const std::vector<int>& _id, Eigen::VectorXd _vals,
@@ -216,20 +210,14 @@ public:
     Eigen::Vector3d getWorldCOM();
 
     //--------------------------------------------------------------------------
-    // Recursive kinematics Algorithms
+    // Recursive dynamics algorithms
     //--------------------------------------------------------------------------
     /// @brief
-    void initKinematics();
+    void init();
 
     /// @brief Update joint and body kinematics.
     void updateForwardKinematics(bool _firstDerivative = true,
                                  bool _secondDerivative = true);
-
-    //--------------------------------------------------------------------------
-    // Recursive dynamics Algorithms
-
-    /// @brief
-    void initDynamics();
 
     /// @brief (q, dq, ddq) --> (tau)
     void computeInverseDynamicsLinear(const Eigen::Vector3d& _gravity,
@@ -299,7 +287,7 @@ protected:
     std::string mName;
 
     /// @brief
-    bool mSelfCollidable;
+    bool mIsSelfCollidable;
 
     //--------------------------------------------------------------------------
     // Structual Properties
@@ -307,16 +295,13 @@ protected:
     /// @brief
     std::vector<BodyNode*> mBodyNodes;
 
-    /// @brief List of markers associated
-    std::vector<Marker*> mMarkers;
-
     //--------------------------------------------------------------------------
     //
     //--------------------------------------------------------------------------
     /// @brief If the skeleton is immobile, its dynamic effect is equivalent to
     /// having infinite mass. If the DOFs of an immobile skeleton are manually
     /// changed, the collision results might not be correct.
-    bool mImmobile;
+    bool mIsMobile;
 
     //--------------------------------------------------------------------------
     //

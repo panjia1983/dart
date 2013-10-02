@@ -102,6 +102,8 @@ class Marker;
 class BodyNode
 {
 public:
+    friend class Skeleton;
+
     //--------------------------------------------------------------------------
     // Constructor and Desctructor
     //--------------------------------------------------------------------------
@@ -112,7 +114,7 @@ public:
     virtual ~BodyNode();
 
     //--------------------------------------------------------------------------
-    // Static properties
+    // Static properties().
     //--------------------------------------------------------------------------
     /// @brief
     void setName(const std::string& _name);
@@ -120,20 +122,21 @@ public:
     /// @brief
     const std::string& getName() const;
 
-    /// @brief Set gravity mode.
-    /// @param[in] _gravityMode
-    void setGravityMode(bool _onoff);
+    /// @brief Set whether gravity affects this body.
+    /// @param[in] _mode True to enable gravity.
+    void setGravityMode(bool _gravityMode);
 
-    /// @brief If the gravity mode is false, this body node does not being
-    /// affected by gravity.
-    /// @return
+    /// @brief Get the gravity mode.
+    /// @return True if gravity is enabled.
     bool getGravityMode() const;
 
-    /// @brief
+    /// @brief Get whether this body node will collide with others in the world.
+    /// @return True if collisions is enabled.
     bool isCollidable() const;
 
-    /// @brief
-    void setCollidability(bool _c);
+    /// @brief Set whether this body node will collide with others in the world.
+    /// @param[in] _isCollidable True to enable collisions.
+    void setCollidable(bool _isCollidable);
 
     /// @brief
     void setMass(double _mass);
@@ -162,9 +165,6 @@ public:
     // Structueral Properties
     //--------------------------------------------------------------------------
     /// @brief
-    void setSkeletonIndex(int _idx);
-
-    /// @brief
     int getSkeletonIndex() const;
 
     /// @brief
@@ -184,9 +184,6 @@ public:
 
     /// @brief
     Shape* getCollisionShape(int _idx) const;
-
-    /// @brief
-    void setSkeleton(Skeleton* _skel);
 
     /// @brief
     Skeleton* getSkeleton() const;
@@ -218,13 +215,14 @@ public:
     /// @brief
     Marker* getMarker(int _idx) const;
 
-    /// @brief Set up the list of dependent dofs.
-    void setDependDofList();
-
     /// @brief Test whether this dof is dependent or not.
+    /// @return True if this body node is dependent on the generalized
+    ///         coordinate.
+    /// @param[in] _genCoordIndex Index of generalized coordinate in the
+    ///                           skeleton.
     /// @warning You may want to use getNumDependentDofs / getDependentDof for
-    /// efficiency.
-    bool dependsOn(int _dofIndex) const;
+    ///          efficiency.
+    bool dependsOn(int _genCoordIndex) const;
 
     /// @brief The number of the dofs by which this node is affected.
     int getNumDependentDofs() const;
@@ -235,76 +233,62 @@ public:
     //--------------------------------------------------------------------------
     // Properties updated by dynamics (kinematics)
     //--------------------------------------------------------------------------
-
-    /// @brief
-    /// This function should be called only in modeling process. The
-    /// transformation of this link will be updating by dynamics algorithms
-    /// automatically.
-    void setWorldTransform(const Eigen::Isometry3d& _W);
-
-    /// @brief Transformation from the local coordinates of this body node to
-    /// the world coordinates.
+    /// @brief Get the transformation from the world frame to this body node
+    ///        frame.
     const Eigen::Isometry3d& getWorldTransform() const;
 
-    /// @brief Transformation from the world coordinates to the local
-    /// coordinates of this body node.
-    Eigen::Isometry3d getWorldInvTransform() const;
-
-    /// @brief Given a 3D vector lp in the local coordinates of this body node.
-    /// @return The world coordinates of this vector
-    Eigen::Vector3d evalWorldPos(const Eigen::Vector3d& _lp) const;
-
-    /// @brief
+    /// @brief Get the generalized velocity at the origin of this body node
+    ///        where the velocity is expressed in this body node frame.
     const Eigen::Vector6d& getBodyVelocity() const;
 
-    /// @brief
-    Eigen::Vector6d getWorldVelocity() const;
+    /// @brief Get the generalized velocity at a point on this body node where
+    ///        the velocity is expressed in the world frame.
+    /// @param[in] _offset Point vector from the origin of this body frame where
+    ///                    the point vector is expressed in the world frame.
+    Eigen::Vector6d getWorldVelocity(
+            const Eigen::Vector3d& _offset = Eigen::Vector3d::Zero()) const;
 
-    /// @brief
-    Eigen::Vector6d getWorldVelocityAtCOM() const;
-
-    /// @breif
-    Eigen::Vector6d getWorldVelocityAtPoint(const Eigen::Vector3d& _pointBody) const;
-
-    /// @breif
-    Eigen::Vector6d getWorldVelocityAtFrame(const Eigen::Isometry3d& _T) const;
-
-    /// @brief
+    /// @brief Get generalized acceleration at the origin of this body node
+    /// where the acceleration is expressed in this body node frame.
     const Eigen::Vector6d& getBodyAcceleration() const;
 
-    /// @brief
-    Eigen::Vector6d getWorldAcceleration() const;
+    /// @brief Get generalized acceleration at a point on this body node where
+    ///        the acceleration is expressed in the world frame.
+    /// @param[in] _offset Point vector from the origin of this body frame where
+    ///                    the point vector is expressed in the world frame.
+    Eigen::Vector6d getWorldAcceleration(
+            const Eigen::Vector3d& _offset = Eigen::Vector3d::Zero()) const;
 
-    /// @brief
-    Eigen::Vector6d getWorldAccelerationAtCOM() const;
-
-    /// @breif
-    Eigen::Vector6d getWorldAccelerationAtPoint(const Eigen::Vector3d& _pointBody) const;
-
-    /// @breif
-    Eigen::Vector6d getWorldAccelerationAtFrame(const Eigen::Isometry3d& _T) const;
-
-    /// @brief
+    /// @brief Get generalized Jacobian at the origin of this body node where
+    ///        the Jacobian is expressed in this body node frame.
     const math::Jacobian& getBodyJacobian() const;
 
-    /// @brief
-    math::Jacobian getWorldJacobian() const;
+    /// @brief Get generalized Jacobian at a point on this body node where the
+    ///        Jacobian is expressed in the world frame.
+    /// @param[in] _offset Point vector from the origin of this body frame where
+    ///                    the point vector is expressed in the world frame.
+    math::Jacobian getWorldJacobian(const Eigen::Vector3d& _offset) const;
 
-    /// @brief Get body Jacobian at contact point.
-    math::Jacobian getWorldJacobianAtPoint(const Eigen::Vector3d& r_world) const;
+    /// @brief Get time derivative of generalized Jacobian at the origin of this
+    ///        body node where the Jacobian is expressed in this body node
+    ///        frame.
+    const math::Jacobian& getBodyJacobianTimeDeriv() const;
 
-    /// @brief
-    Eigen::MatrixXd getWorldJacobianAtPoint_LinearPartOnly(
-            const Eigen::Vector3d& r_world) const;
+    /// @brief Get time derivative of generalized Jacobian at a point on this
+    ///        body node where the time derivative of Jacobian is expressed in
+    ///        the world frame.
+    /// @param[in] _offset Point vector from the origin of this body frame where
+    ///                    the point vector is expressed in the world frame.
+    math::Jacobian getWorldJacobianTimeDeriv(
+            const Eigen::Vector3d& _offset = Eigen::Vector3d::Zero()) const;
 
-    /// @brief
-    const math::Jacobian& getBodyJacobianDeriv() const;
+    /// @brief Set whether this body node is colliding with others.
+    /// @param[in] True if this body node is colliding.
+    void setColliding(bool _isColliding);
 
-    /// @brief
-    void setColliding(bool _colliding);
-
-    /// @brief
-    bool getColliding();
+    /// @brief Get whether this body node is colliding with others.
+    /// @return True if this body node is colliding.
+    bool isColliding();
 
     /// @brief Add applying linear Cartesian forces to this node.
     ///
@@ -335,7 +319,7 @@ public:
     void setExtTorque(const Eigen::Vector3d& _torque, bool _isLocal = false);
 
     /// @brief Clean up structures that store external forces: mContacts, mFext,
-    /// mExtForceBody and mExtTorqueBody.
+    ///        mExtForceBody and mExtTorqueBody.
     ///
     /// Called from @Skeleton::clearExternalForces.
     void clearExternalForces();
@@ -374,8 +358,6 @@ public:
     //--------------------------------------------------------------------------
     // Sub-functions for Recursive Kinematics Algorithms
     //--------------------------------------------------------------------------
-    /// @brief Initialize the vector memebers with proper sizes.
-    void init();
 
     /// @brief Update local transformations and world transformations.
     /// T(i-1,i), W(i)
@@ -431,7 +413,7 @@ public:
     void updateMassMatrix();
 
     /// @brief Aggregate the external forces mFext in the generalized
-    /// coordinates recursively.
+    ///        coordinates recursively.
     void aggregateExternalForces(Eigen::VectorXd& _extForce);
 
     /// @brief
@@ -444,6 +426,9 @@ public:
     void aggregateMassInverseFS(Eigen::MatrixXd& _MInv, BodyNode* _bodyNode);
 
 protected:
+    /// @brief Initialize the vector memebers with proper sizes.
+    void init(Skeleton* _skeleton, int _skeletonIndex);
+
     //--------------------------------------------------------------------------
     // General properties
     //--------------------------------------------------------------------------
@@ -483,10 +468,10 @@ protected:
     std::vector<Shape*> mColShapes;
 
     /// @brief Indicating whether this node is collidable.
-    bool mCollidable;
+    bool mIsCollidable;
 
     /// @brief Whether the node is currently in collision with another node.
-    bool mColliding;
+    bool mIsColliding;
 
     //--------------------------------------------------------------------------
     // Structual Properties
@@ -519,7 +504,7 @@ protected:
     math::Jacobian mBodyJacobian;
 
     /// @brief
-    math::Jacobian mBodyJacobianDeriv;
+    math::Jacobian mBodyJacobianTimeDeriv;
 
     /// @brief Generalized body velocity w.r.t. body frame.
     Eigen::Vector6d mV;
