@@ -59,9 +59,9 @@ BodyNode::BodyNode(const std::string& _name)
       mName(_name),
       mIsCollidable(true),
       mIsColliding(false),
-      mSkeleton(NULL),
-      mParentJoint(NULL),
-      mParentBodyNode(NULL),
+      mSkeleton(nullptr),
+      mParentJoint(nullptr),
+      mParentBodyNode(nullptr),
       mChildBodyNodes(std::vector<BodyNode*>(0)),
       mGravityMode(true),
       mCenterOfMass(Eigen::Vector3d::Zero()),
@@ -88,18 +88,15 @@ BodyNode::BodyNode(const std::string& _name)
 
 BodyNode::~BodyNode()
 {
-    for (std::vector<Shape*>::const_iterator it = mVizShapes.begin();
-         it != mVizShapes.end(); ++it)
-        delete (*it);
+    for (const auto& it : mVizShapes)
+        delete it;
 
-    for (std::vector<Shape*>::const_iterator itColShape = mColShapes.begin();
-         itColShape != mColShapes.end(); ++itColShape)
-        if (mVizShapes.end() == find(mVizShapes.begin(), mVizShapes.end(), *itColShape))
-            delete (*itColShape);
+    for (const auto& it : mColShapes)
+        if (mVizShapes.end() == find(mVizShapes.begin(), mVizShapes.end(), it))
+            delete it;
 
-    for (std::vector<Marker*>::const_iterator it = mMarkers.begin();
-         it != mMarkers.end(); ++it)
-        delete (*it);
+    for (const auto& it : mMarkers)
+        delete it;
 
     if (mParentJoint)
         delete mParentJoint;
@@ -154,7 +151,7 @@ BodyNode*BodyNode::getParentBodyNode() const
 
 void BodyNode::addChildBodyNode(BodyNode* _body)
 {
-    assert(_body != NULL);
+    assert(_body != nullptr);
 
     mChildBodyNodes.push_back(_body);
     _body->mParentBodyNode = this;
@@ -308,7 +305,7 @@ void BodyNode::draw(renderer::RenderInterface* _ri,
                     bool _useDefaultColor,
                     int _depth) const
 {
-    if (_ri == NULL)
+    if (_ri == nullptr)
         return;
 
     _ri->pushMatrix();
@@ -417,7 +414,7 @@ void BodyNode::updateVelocity(bool _updateJacobian)
     const int numParentDOFs = getNumDependentDofs()-numLocalDOFs;
 
     // Parent Jacobian
-    if (mParentBodyNode != NULL)
+    if (mParentBodyNode != nullptr)
     {
         assert(mParentBodyNode->mBodyJacobian.cols() + mParentJoint->getNumGenCoords()
                == mBodyJacobian.cols());
@@ -500,7 +497,7 @@ void BodyNode::updateAcceleration(bool _updateJacobianDeriv)
     const int numParentDOFs = getNumDependentDofs() - numLocalDOFs;
 
     // Parent Jacobian
-    if (mParentBodyNode != NULL)
+    if (mParentBodyNode != nullptr)
     {
         assert(mParentBodyNode->mBodyJacobianTimeDeriv.cols() + mParentJoint->getNumGenCoords()
                == mBodyJacobianTimeDeriv.cols());
@@ -714,15 +711,13 @@ void BodyNode::updateBodyForce(const Eigen::Vector3d& _gravity,
     mF -= mFgravity;              // Gravity force
     mF -= math::dad(mV, mI * mV); // Coriolis force
 
-    for (std::vector<BodyNode*>::iterator iChildBody = mChildBodyNodes.begin();
-         iChildBody != mChildBodyNodes.end();
-         ++iChildBody)
+    for (const auto& it : mChildBodyNodes)
     {
-        dynamics::Joint* childJoint = (*iChildBody)->getParentJoint();
-        assert(childJoint != NULL);
+        dynamics::Joint* childJoint = it->getParentJoint();
+        assert(childJoint != nullptr);
 
         mF += math::dAdInvT(childJoint->getLocalTransform(),
-                            (*iChildBody)->getBodyForce());
+                            it->getBodyForce());
     }
 
     assert(!math::isNan(mF));
@@ -730,7 +725,7 @@ void BodyNode::updateBodyForce(const Eigen::Vector3d& _gravity,
 
 void BodyNode::updateGeneralizedForce(bool _withDampingForces)
 {
-    assert(mParentJoint != NULL);
+    assert(mParentJoint != nullptr);
 
     const math::Jacobian& J = mParentJoint->getLocalJacobian();
 
@@ -744,13 +739,10 @@ void BodyNode::updateArticulatedInertia()
 {
     mAI = mI;
 
-    std::vector<BodyNode*>::iterator it;
-    for (it = mChildBodyNodes.begin(); it != mChildBodyNodes.end(); ++it)
-    {
+    for (const auto& it : mChildBodyNodes)
         mAI += math::transformInertia(
-                    (*it)->getParentJoint()->getLocalTransform().inverse(),
-                    (*it)->mPi);
-    }
+                    it->getParentJoint()->getLocalTransform().inverse(),
+                    it->mPi);
 }
 
 void BodyNode::updateBiasForce(const Eigen::Vector3d& _gravity)
@@ -762,17 +754,16 @@ void BodyNode::updateBiasForce(const Eigen::Vector3d& _gravity)
 
     mB = -math::dad(mV, mI*mV) - mFext - mFgravity;
 
-    std::vector<BodyNode*>::iterator it;
-    for (it = mChildBodyNodes.begin(); it != mChildBodyNodes.end(); ++it)
-        mB += math::dAdInvT((*it)->getParentJoint()->getLocalTransform(),
-                            (*it)->mBeta);
+    for (const auto& it : mChildBodyNodes)
+        mB += math::dAdInvT(it->getParentJoint()->getLocalTransform(),
+                            it->mBeta);
 
     assert(!math::isNan(mB));
 }
 
 void BodyNode::updatePsi()
 {
-    assert(mParentJoint != NULL);
+    assert(mParentJoint != nullptr);
 
     //int n = mParentJoint->getNumGenCoords();
     //mAI_S = Eigen::MatrixXd::Zero(6, n);
@@ -857,7 +848,7 @@ void BodyNode::updateMassMatrix()
 
 void BodyNode::aggregateExternalForces(Eigen::VectorXd& _extForce)
 {
-    assert(mParentJoint != NULL);
+    assert(mParentJoint != nullptr);
 
     Eigen::VectorXd localForce = mBodyJacobian.transpose() * mFext;
 

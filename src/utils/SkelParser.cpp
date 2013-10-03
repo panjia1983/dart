@@ -77,22 +77,22 @@ simulation::World* SkelParser::readSkelFile(const std::string& _filename)
     catch(std::exception const& e)
     {
         std::cout << "LoadFile Fails: " << e.what() << std::endl;
-        return NULL;
+        return nullptr;
     }
 
     //--------------------------------------------------------------------------
     // Load DART
-    tinyxml2::XMLElement* dartElement = NULL;
+    tinyxml2::XMLElement* dartElement = nullptr;
     dartElement = _dartFile.FirstChildElement("skel");
-    if (dartElement == NULL)
-        return NULL;
+    if (dartElement == nullptr)
+        return nullptr;
 
     //--------------------------------------------------------------------------
     // Load World
-    tinyxml2::XMLElement* worldElement = NULL;
+    tinyxml2::XMLElement* worldElement = nullptr;
     worldElement = dartElement->FirstChildElement("world");
-    if (worldElement == NULL)
-        return NULL;
+    if (worldElement == nullptr)
+        return nullptr;
 
     simulation::World* newWorld = readWorld(worldElement);
 
@@ -101,21 +101,21 @@ simulation::World* SkelParser::readSkelFile(const std::string& _filename)
 
 simulation::World* SkelParser::readWorld(tinyxml2::XMLElement* _worldElement)
 {
-    assert(_worldElement != NULL);
+    assert(_worldElement != nullptr);
 
     // Create a world
     simulation::World* newWorld = new simulation::World;
 
     //--------------------------------------------------------------------------
     // Load physics
-    tinyxml2::XMLElement* physicsElement = NULL;
+    tinyxml2::XMLElement* physicsElement = nullptr;
     physicsElement = _worldElement->FirstChildElement("physics");
-    if (physicsElement != NULL)
+    if (physicsElement != nullptr)
     {
         // Time step
-        tinyxml2::XMLElement* timeStepElement = NULL;
+        tinyxml2::XMLElement* timeStepElement = nullptr;
         timeStepElement = physicsElement->FirstChildElement("time_step");
-        if (timeStepElement != NULL)
+        if (timeStepElement != nullptr)
         {
             std::string strTimeStep = timeStepElement->GetText();
             double timeStep = toDouble(strTimeStep);
@@ -123,9 +123,9 @@ simulation::World* SkelParser::readWorld(tinyxml2::XMLElement* _worldElement)
         }
 
         // Gravity
-        tinyxml2::XMLElement* gravityElement = NULL;
+        tinyxml2::XMLElement* gravityElement = nullptr;
         gravityElement = physicsElement->FirstChildElement("gravity");
-        if (gravityElement != NULL)
+        if (gravityElement != nullptr)
         {
             std::string strGravity = gravityElement->GetText();
             Eigen::Vector3d gravity = toVector3d(strGravity);
@@ -151,8 +151,8 @@ dynamics::Skeleton* SkelParser::readSkeleton(
         tinyxml2::XMLElement* _skeletonElement,
         simulation::World* _world)
 {
-    assert(_skeletonElement != NULL);
-    assert(_world != NULL);
+    assert(_skeletonElement != nullptr);
+    assert(_world != nullptr);
 
     dynamics::Skeleton* newSkeleton = new dynamics::Skeleton;
     Eigen::Isometry3d skeletonFrame = Eigen::Isometry3d::Identity();
@@ -173,9 +173,9 @@ dynamics::Skeleton* SkelParser::readSkeleton(
 
     //--------------------------------------------------------------------------
     // immobile attribute
-    tinyxml2::XMLElement* immobileElement = NULL;
+    tinyxml2::XMLElement* immobileElement = nullptr;
     immobileElement = _skeletonElement->FirstChildElement("immobile");
-    if (immobileElement != NULL)
+    if (immobileElement != nullptr)
     {
         std::string stdImmobile = immobileElement->GetText();
         bool immobile = toBool(stdImmobile);
@@ -208,7 +208,7 @@ dynamics::Skeleton* SkelParser::readSkeleton(
     {
         dynamics::BodyNode* bodyNode = skelBodyNodes[i].bodyNode;
 
-        if (bodyNode->getParentJoint() == NULL)
+        if (bodyNode->getParentJoint() == nullptr)
         {
             // If this link has no parent joint, then we add 6-dof free joint.
             dynamics::FreeJoint* newFreeJoint = new dynamics::FreeJoint;
@@ -222,9 +222,8 @@ dynamics::Skeleton* SkelParser::readSkeleton(
         }
     }
 
-    for (std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >::iterator it = skelBodyNodes.begin();
-         it != skelBodyNodes.end(); ++it)
-        newSkeleton->addBodyNode((*it).bodyNode);
+    for (const auto& it : skelBodyNodes)
+        newSkeleton->addBodyNode(it.bodyNode);
 
     return newSkeleton;
 }
@@ -234,8 +233,8 @@ SkelParser::SkelBodyNode SkelParser::readBodyNode(
         dynamics::Skeleton* _skeleton,
         const Eigen::Isometry3d& _skeletonFrame)
 {
-    assert(_bodyNodeElement != NULL);
-    assert(_skeleton != NULL);
+    assert(_bodyNodeElement != nullptr);
+    assert(_skeleton != nullptr);
 
     dynamics::BodyNode* newBodyNode = new dynamics::BodyNode;
     Eigen::Isometry3d initTransform = Eigen::Isometry3d::Identity();
@@ -347,7 +346,7 @@ SkelParser::SkelBodyNode SkelParser::readBodyNode(
 
 dynamics::Shape* SkelParser::readShape(tinyxml2::XMLElement* vizElement)
 {
-    dynamics::Shape* newShape = NULL;
+    dynamics::Shape* newShape = nullptr;
 
     // type
     assert(hasElement(vizElement, "geometry"));
@@ -406,9 +405,9 @@ dynamics::Shape* SkelParser::readShape(tinyxml2::XMLElement* vizElement)
 dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
                            const std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >& _skelBodyNodes)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
-    dynamics::Joint* newJoint = NULL;
+    dynamics::Joint* newJoint = nullptr;
 
     //--------------------------------------------------------------------------
     // Type attribute
@@ -430,7 +429,7 @@ dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
         newJoint = readTranslationalJoint(_jointElement);
     if (type == std::string("free"))
         newJoint = readFreeJoint(_jointElement);
-    assert(newJoint != NULL);
+    assert(newJoint != nullptr);
 
     //--------------------------------------------------------------------------
     // Name attribute
@@ -440,7 +439,7 @@ dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
     //--------------------------------------------------------------------------
     // parent
     SkelBodyNode skelParentBodyNode;
-    skelParentBodyNode.bodyNode = NULL;
+    skelParentBodyNode.bodyNode = nullptr;
     skelParentBodyNode.initTransform = Eigen::Isometry3d::Identity();
 
     if (hasElement(_jointElement, "parent"))
@@ -449,15 +448,14 @@ dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
 
         if (strParent != std::string("world"))
         {
-            for (std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >::const_iterator it =
-                 _skelBodyNodes.begin(); it != _skelBodyNodes.end(); ++it)
-                if ((*it).bodyNode->getName() == strParent)
+            for (const auto& it : _skelBodyNodes)
+                if (it.bodyNode->getName() == strParent)
                 {
-                    skelParentBodyNode = (*it);
+                    skelParentBodyNode = it;
                     break;
                 }
 
-            if (skelParentBodyNode.bodyNode == NULL)
+            if (skelParentBodyNode.bodyNode == nullptr)
             {
                 dterr << "Can't find the parent body ["
                   << strParent
@@ -477,24 +475,21 @@ dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
     //--------------------------------------------------------------------------
     // child
     SkelBodyNode skelChildBodyNode;
-    skelChildBodyNode.bodyNode = NULL;
+    skelChildBodyNode.bodyNode = nullptr;
     skelChildBodyNode.initTransform = Eigen::Isometry3d::Identity();
 
     if (hasElement(_jointElement, "child"))
     {
         std::string strChild = getValueString(_jointElement, "child");
 
-        for (std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >::const_iterator it =
-             _skelBodyNodes.begin(); it != _skelBodyNodes.end(); ++it)
-        {
-            if ((*it).bodyNode->getName() == strChild)
+        for (const auto& it : _skelBodyNodes)
+            if (it.bodyNode->getName() == strChild)
             {
-                skelChildBodyNode = (*it);
+                skelChildBodyNode = it;
                 break;
             }
-        }
 
-        if (skelChildBodyNode.bodyNode == NULL)
+        if (skelChildBodyNode.bodyNode == nullptr)
         {
             dterr << "Can't find the child body ["
               << strChild
@@ -536,7 +531,7 @@ dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
 dynamics::WeldJoint* SkelParser::readWeldJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::WeldJoint* newWeldJoint = new dynamics::WeldJoint;
 
@@ -546,7 +541,7 @@ dynamics::WeldJoint* SkelParser::readWeldJoint(
 dynamics::RevoluteJoint* SkelParser::readRevoluteJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::RevoluteJoint* newRevoluteJoint = new dynamics::RevoluteJoint;
 
@@ -620,7 +615,7 @@ dynamics::RevoluteJoint* SkelParser::readRevoluteJoint(
 dynamics::PrismaticJoint* SkelParser::readPrismaticJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::PrismaticJoint* newPrismaticJoint = new dynamics::PrismaticJoint;
 
@@ -694,7 +689,7 @@ dynamics::PrismaticJoint* SkelParser::readPrismaticJoint(
 dynamics::ScrewJoint* SkelParser::readScrewJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::ScrewJoint* newScrewJoint = new dynamics::ScrewJoint;
 
@@ -775,7 +770,7 @@ dynamics::ScrewJoint* SkelParser::readScrewJoint(
 dynamics::UniversalJoint* SkelParser::readUniversalJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::UniversalJoint* newUniversalJoint = new dynamics::UniversalJoint;
 
@@ -889,7 +884,7 @@ dynamics::UniversalJoint* SkelParser::readUniversalJoint(
 dynamics::BallJoint* SkelParser::readBallJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::BallJoint* newBallJoint = new dynamics::BallJoint;
 
@@ -915,7 +910,7 @@ dynamics::BallJoint* SkelParser::readBallJoint(
 dynamics::EulerJoint* SkelParser::readEulerJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::EulerJoint* newEulerJoint = new dynamics::EulerJoint;
 
@@ -1066,7 +1061,7 @@ dynamics::EulerJoint* SkelParser::readEulerJoint(
 dynamics::TranslationalJoint* SkelParser::readTranslationalJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::TranslationalJoint* newTranslationalJoint
             = new dynamics::TranslationalJoint;
@@ -1092,7 +1087,7 @@ dynamics::TranslationalJoint* SkelParser::readTranslationalJoint(
 
 dynamics::FreeJoint* SkelParser::readFreeJoint(tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::FreeJoint* newFreeJoint = new dynamics::FreeJoint;
 

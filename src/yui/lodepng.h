@@ -243,11 +243,11 @@ struct LodePNGDecompressSettings
 {
   unsigned ignore_adler32; /*if 1, continue and don't give an error message if the Adler32 checksum is corrupted*/
 
-  /*use custom zlib decoder instead of built in one (default: null)*/
+  /*use custom zlib decoder instead of built in one (default: nullptr)*/
   unsigned (*custom_zlib)(unsigned char**, size_t*,
                           const unsigned char*, size_t,
                           const LodePNGDecompressSettings*);
-  /*use custom deflate decoder instead of built in one (default: null)
+  /*use custom deflate decoder instead of built in one (default: nullptr)
   if custom_zlib is used, custom_deflate is ignored since only the built in
   zlib function will call custom_deflate*/
   unsigned (*custom_inflate)(unsigned char**, size_t*,
@@ -274,11 +274,11 @@ struct LodePNGCompressSettings /*deflate = compress*/
   unsigned use_lz77; /*whether or not to use LZ77. Should be 1 for proper compression.*/
   unsigned windowsize; /*the maximum is 32768, higher gives more compression but is slower. Typical value: 2048.*/
 
-  /*use custom zlib encoder instead of built in one (default: null)*/
+  /*use custom zlib encoder instead of built in one (default: nullptr)*/
   unsigned (*custom_zlib)(unsigned char**, size_t*,
                           const unsigned char*, size_t,
                           const LodePNGCompressSettings*);
-  /*use custom deflate encoder instead of built in one (default: null)
+  /*use custom deflate encoder instead of built in one (default: nullptr)
   if custom_zlib is used, custom_deflate is ignored since only the built in
   zlib function will call custom_deflate*/
   unsigned (*custom_deflate)(unsigned char**, size_t*,
@@ -641,7 +641,7 @@ Fourth byte: uppercase = unsafe to copy, lowercase = safe to copy
 /*get the length of the data of the chunk. Total chunk length has 12 bytes more.*/
 unsigned lodepng_chunk_length(const unsigned char* chunk);
 
-/*puts the 4-byte type in null terminated string*/
+/*puts the 4-byte type in nullptr terminated string*/
 void lodepng_chunk_type(char type[5], const unsigned char* chunk);
 
 /*check if the type is the given type*/
@@ -708,7 +708,7 @@ unsigned lodepng_inflate(unsigned char** out, size_t* outsize,
 /*
 Decompresses Zlib data. Reallocates the out buffer and appends the data. The
 data must be according to the zlib specification.
-Either, *out must be NULL and *outsize must be 0, or, *out must be a valid
+Either, *out must be nullptr and *outsize must be 0, or, *out must be a valid
 buffer and *outsize its size in bytes. out must be freed by user after usage.
 */
 unsigned lodepng_zlib_decompress(unsigned char** out, size_t* outsize,
@@ -721,7 +721,7 @@ unsigned lodepng_zlib_decompress(unsigned char** out, size_t* outsize,
 Compresses data with Zlib. Reallocates the out buffer and appends the data.
 Zlib adds a small header and trailer around the deflate data.
 The data is output in the format of the zlib specification.
-Either, *out must be NULL and *outsize must be 0, or, *out must be a valid
+Either, *out must be nullptr and *outsize must be 0, or, *out must be a valid
 buffer and *outsize its size in bytes. out must be freed by user after usage.
 */
 unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize,

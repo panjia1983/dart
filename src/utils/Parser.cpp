@@ -273,7 +273,7 @@ Eigen::Isometry3d toIsometry3d(const std::string& _str)
 
 std::string getValueString(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -283,7 +283,7 @@ std::string getValueString(tinyxml2::XMLElement* _parentElement, const std::stri
 
 bool getValueBool(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -304,7 +304,7 @@ bool getValueBool(tinyxml2::XMLElement* _parentElement, const std::string& _name
 
 int getValueInt(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -314,7 +314,7 @@ int getValueInt(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 
 unsigned int getValueUInt(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -324,7 +324,7 @@ unsigned int getValueUInt(tinyxml2::XMLElement* _parentElement, const std::strin
 
 float getValueFloat(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -334,7 +334,7 @@ float getValueFloat(tinyxml2::XMLElement* _parentElement, const std::string& _na
 
 double getValueDouble(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -344,7 +344,7 @@ double getValueDouble(tinyxml2::XMLElement* _parentElement, const std::string& _
 
 char getValueChar(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -354,7 +354,7 @@ char getValueChar(tinyxml2::XMLElement* _parentElement, const std::string& _name
 
 Eigen::Vector2d getValueVector2d(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -364,7 +364,7 @@ Eigen::Vector2d getValueVector2d(tinyxml2::XMLElement* _parentElement, const std
 
 Eigen::Vector3d getValueVector3d(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -374,7 +374,7 @@ Eigen::Vector3d getValueVector3d(tinyxml2::XMLElement* _parentElement, const std
 
 Eigen::Vector6d getValueVector6d(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -384,7 +384,7 @@ Eigen::Vector6d getValueVector6d(tinyxml2::XMLElement* _parentElement, const std
 
 Eigen::Vector3d getValueVec3(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -394,7 +394,7 @@ Eigen::Vector3d getValueVec3(tinyxml2::XMLElement* _parentElement, const std::st
 
 Eigen::Isometry3d getValueIsometry3d(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
     std::string str = _parentElement->FirstChildElement(_name.c_str())->GetText();
@@ -404,10 +404,10 @@ Eigen::Isometry3d getValueIsometry3d(tinyxml2::XMLElement* _parentElement, const
 
 bool hasElement(tinyxml2::XMLElement* _parentElement, const std::string& _name)
 {
-    assert(_parentElement != NULL);
+    assert(_parentElement != nullptr);
     assert(!_name.empty());
 
-    return _parentElement->FirstChildElement(_name.c_str()) == NULL ? false : true;
+    return _parentElement->FirstChildElement(_name.c_str()) == nullptr ? false : true;
 }
 
 tinyxml2::XMLElement* getElement(tinyxml2::XMLElement* _parentElement,
@@ -469,7 +469,7 @@ ElementEnumerator::ElementEnumerator(tinyxml2::XMLElement* _parent,
                                      const std::string& _name)
     : m_name(_name),
       m_parent(_parent),
-      m_current(NULL)
+      m_current(nullptr)
 {
 }
 
@@ -479,7 +479,7 @@ ElementEnumerator::~ElementEnumerator()
 
 bool ElementEnumerator::valid() const
 {
-    return m_current != NULL;
+    return m_current != nullptr;
 }
 
 bool ElementEnumerator::next()
@@ -493,7 +493,7 @@ bool ElementEnumerator::next()
         m_current = m_parent->FirstChildElement(m_name.c_str());
 
     if(!valid())
-        m_parent = NULL;
+        m_parent = nullptr;
 
     return valid();
 }

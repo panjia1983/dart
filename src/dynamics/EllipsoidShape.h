@@ -50,7 +50,7 @@ public:
     EllipsoidShape(Eigen::Vector3d _dim);
 
     // Documentation inherited.
-    void draw(renderer::RenderInterface* _ri = NULL,
+    void draw(renderer::RenderInterface* _ri = nullptr,
               const Eigen::Vector4d& _col = Eigen::Vector4d::Ones(),
               bool _useDefaultColor = true) const;
 

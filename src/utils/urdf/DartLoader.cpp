@@ -36,7 +36,7 @@ dynamics::Skeleton* DartLoader::parseSkeleton(std::string _urdfFileName) {
 
     boost::shared_ptr<urdf::ModelInterface> skeletonModel = urdf::parseURDF(readFileToString(_urdfFileName));
     if(!skeletonModel)
-        return NULL;
+        return nullptr;
 
     // Change path to a Unix-style path if given a Windows one
     // Windows can handle Unix-style paths (apparently)
@@ -60,7 +60,7 @@ simulation::World* DartLoader::parseWorld(std::string _urdfFileName) {
     
     boost::shared_ptr<urdf::World> worldInterface = urdf::parseWorldURDF(xmlString, worldDirectory);
     if(!worldInterface)
-        return NULL;
+        return nullptr;
 
     // Store paths from world to entities
     parseWorldToEntityPaths(xmlString);
@@ -73,7 +73,7 @@ simulation::World* DartLoader::parseWorld(std::string _urdfFileName) {
 
       if(!skeleton) {
         std::cout << "[ERROR] Robot " << worldInterface->models[i].model->getName() << " was not correctly parsed. World is not loaded. Exiting!" << std::endl;
-        return NULL; 
+        return nullptr; 
       }
 
       // Initialize position and RPY
@@ -178,7 +178,7 @@ dynamics::Skeleton* DartLoader::modelInterfaceToSkeleton(boost::shared_ptr<urdf:
             rootNode = createDartNode(root, _rootToSkelPath);
             rootJoint = createDartJoint(root->parent_joint);
             if(!rootJoint)
-                return NULL;
+                return nullptr;
         }
     }
     else {
@@ -260,11 +260,11 @@ dynamics::Joint* DartLoader::createDartJoint(boost::shared_ptr<const urdf::Joint
   case urdf::Joint::PLANAR:
       std::cout << "Planar joint not supported." << std::endl;
       assert(false);
-      return NULL;
+      return nullptr;
   default:
       std::cout << "Unsupported joint type." << std::endl;
       assert(false);
-      return NULL;
+      return nullptr;
   }
   joint->setName(_jt->name);
   joint->setTransformFromParentBodyNode(toEigen(_jt->parent_to_joint_origin_transform));
@@ -349,8 +349,8 @@ dynamics::Shape* DartLoader::createShape(boost::shared_ptr<VisualOrCollision> _v
     const aiScene* model = dynamics::MeshShape::loadMesh( fullPath );
     
     if(!model) {
-      std::cout<< "[add_Shape] [ERROR] Not loading model " << fullPath << " (NULL) \n";
-      shape = NULL;
+      std::cout<< "[add_Shape] [ERROR] Not loading model " << fullPath << " (nullptr) \n";
+      shape = nullptr;
     } 
     else {
       shape = new dynamics::MeshShape(Eigen::Vector3d(mesh->scale.x, mesh->scale.y, mesh->scale.z), model);
@@ -360,7 +360,7 @@ dynamics::Shape* DartLoader::createShape(boost::shared_ptr<VisualOrCollision> _v
   // Unknown geometry type
   else {
     std::cout << "[add_Shape] No MESH, BOX, CYLINDER OR SPHERE! Not loading this shape." << std::endl;
-    return NULL;
+    return nullptr;
   }
 
   shape->setLocalTransform(toEigen(_vizOrCol->origin));

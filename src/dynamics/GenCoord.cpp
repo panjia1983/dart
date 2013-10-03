@@ -61,7 +61,7 @@ GenCoord::GenCoord()
       DddqDp(0.0),
       DtauDp(0.0),
 //      mSkelIndex(-1),
-//      mJoint(NULL),
+//      mJoint(nullptr),
       mName("dof")
 {
 }

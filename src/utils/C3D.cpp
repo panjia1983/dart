@@ -80,7 +80,7 @@ bool loadC3DFile(const char *_fileName, Eigen::EIGEN_VV_VEC3D& _pointData, int *
     c3d_frame frame;
     bool bDecFmt = true;
 
-    if ((file = fopen( _fileName, "rb" )) == NULL)
+    if ((file = fopen( _fileName, "rb" )) == nullptr)
         return false;
 
     //get the header
@@ -174,7 +174,7 @@ bool saveC3DFile(const char *_fileName, Eigen::EIGEN_VV_VEC3D& _pointData, int _
     c3d_param parm;
     c3d_frame frame;
 
-    if ((file = fopen(_fileName, "wb")) == NULL)
+    if ((file = fopen(_fileName, "wb")) == nullptr)
         return false;
 
     int mrkrCnt = _nMarker;

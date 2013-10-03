@@ -66,7 +66,7 @@ GlutWindow::GlutWindow()
     mBackground[1] = 0.3;
     mBackground[2] = 0.3;
     mBackground[3] = 1.0;
-    mRI = NULL;
+    mRI = nullptr;
 }
 
 GlutWindow::~GlutWindow()

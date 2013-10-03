@@ -319,7 +319,7 @@ fcl::BVHModel<BV>* createCylinder(double _baseRadius, double _topRadius,
 
 	if (_slices < 2 || _stacks < 1 || _baseRadius < 0.0 || _topRadius < 0.0 ||
 			_height < 0.0) {
-		return NULL;
+		return nullptr;
 	}
 
 	/* Center at CoM */

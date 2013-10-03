@@ -111,7 +111,7 @@ TEST(SKEL_PARSER, EMPTY)
 {
     World* world = SkelParser::readSkelFile(DART_DATA_PATH"skel/test/empty.skel");
 
-    EXPECT_TRUE(world != NULL);
+    EXPECT_TRUE(world != nullptr);
     EXPECT_EQ(world->getTimeStep(), 0.001);
     EXPECT_EQ(world->getGravity()(0), 0);
     EXPECT_EQ(world->getGravity()(1), 0);
@@ -129,7 +129,7 @@ TEST(SKEL_PARSER, PENDULUM)
 {
     World* world = SkelParser::readSkelFile(DART_DATA_PATH"skel/test/single_pendulum.skel");
 
-    EXPECT_TRUE(world != NULL);
+    EXPECT_TRUE(world != nullptr);
     EXPECT_EQ(world->getTimeStep(), 0.001);
     EXPECT_EQ(world->getGravity()(0), 0);
     EXPECT_EQ(world->getGravity()(1), -9.81);
@@ -149,7 +149,7 @@ TEST(SKEL_PARSER, SERIAL_CAHIN)
 {
     World* world = SkelParser::readSkelFile(DART_DATA_PATH"skel/test/serial_chain_ball_joint.skel");
 
-    EXPECT_TRUE(world != NULL);
+    EXPECT_TRUE(world != nullptr);
     EXPECT_EQ(world->getTimeStep(), 0.001);
     EXPECT_EQ(world->getGravity()(0), 0);
     EXPECT_EQ(world->getGravity()(1), -9.81);

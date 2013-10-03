@@ -260,7 +260,7 @@ typedef enum {
   dJointTypeUniversal,
   dJointTypeHinge2,
   dJointTypeFixed,
-  dJointTypeNull,
+  dJointTypenullptr,
   dJointTypeAMotor,
   dJointTypeLMotor,
   dJointTypePlane2D,

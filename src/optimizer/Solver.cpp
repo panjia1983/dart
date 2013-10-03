@@ -43,7 +43,7 @@ namespace dart {
 namespace optimizer {
 
 Solver::Solver()
-    : mProb(NULL) {
+    : mProb(nullptr) {
 }
 
 Solver::Solver(Problem *prob)

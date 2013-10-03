@@ -54,9 +54,8 @@ Skeleton::Skeleton(const std::string& _name)
       mTotalMass(0.0),
       mIsMobile(true)
 {
-    for (std::vector<BodyNode*>::const_iterator it = mBodyNodes.begin();
-         it != mBodyNodes.end(); ++it)
-        delete (*it);
+    for (const auto& it : mBodyNodes)
+        delete it;
 }
 
 Skeleton::~Skeleton()
@@ -163,14 +162,11 @@ BodyNode* Skeleton::getBodyNode(const std::string& _name) const
 {
     assert(!_name.empty());
 
-    for (std::vector<BodyNode*>::const_iterator itrBody = mBodyNodes.begin();
-         itrBody != mBodyNodes.end();
-         ++itrBody) {
-        if ((*itrBody)->getName() == _name)
-            return *itrBody;
-    }
+    for (const auto& it : mBodyNodes)
+        if (it->getName() == _name)
+            return it;
 
-    return NULL;
+    return nullptr;
 }
 
 Joint* Skeleton::getJoint(int _idx) const
@@ -182,32 +178,23 @@ Joint* Skeleton::getJoint(const std::string& _name) const
 {
     assert(!_name.empty());
 
-    for (std::vector<BodyNode*>::const_iterator it = mBodyNodes.begin();
-         it != mBodyNodes.end();
-         ++it)
-    {
-        if ((*it)->getParentJoint()->getName() == _name)
-            return (*it)->getParentJoint();
-    }
+    for (const auto& it : mBodyNodes)
+        if (it->getParentJoint()->getName() == _name)
+            return it->getParentJoint();
 
-    return NULL;
+    return nullptr;
 }
 
 Marker* Skeleton::getMarker(const std::string& _name) const
 {
     assert(!_name.empty());
 
-    for (std::vector<BodyNode*>::const_iterator it = mBodyNodes.begin();
-         it != mBodyNodes.end(); ++it)
-    {
-        for (int i = 0; i < (*it)->getNumMarkers(); ++i)
-        {
-            if ((*it)->getMarker(i)->getName() == _name)
-                return (*it)->getMarker(i);
-        }
-    }
+    for (const auto& it : mBodyNodes)
+        for (int i = 0; i < it->getNumMarkers(); ++i)
+            if (it->getMarker(i)->getName() == _name)
+                return it->getMarker(i);
 
-    return NULL;
+    return nullptr;
 }
 
 Eigen::VectorXd Skeleton::getConfig(const std::vector<int>& _id) const
@@ -230,22 +217,16 @@ void Skeleton::setConfig(const std::vector<int>& _genCoords, const Eigen::Vector
     for( unsigned int i = 0; i < _genCoords.size(); i++ )
         mGenCoords[_genCoords[i]]->set_q(_config(i));
 
-    for (std::vector<BodyNode*>::iterator itrBody = mBodyNodes.begin();
-         itrBody != mBodyNodes.end(); ++itrBody)
-    {
-        (*itrBody)->updateTransform();
-    }
+    for (auto& it : mBodyNodes)
+        it->updateTransform();
 }
 
 void Skeleton::setConfig(const Eigen::VectorXd& _config)
 {
     set_q(_config);
 
-    for (std::vector<BodyNode*>::iterator itrBody = mBodyNodes.begin();
-         itrBody != mBodyNodes.end(); ++itrBody)
-    {
-        (*itrBody)->updateTransform();
-    }
+    for (auto& it : mBodyNodes)
+        it->updateTransform();
 }
 
 void Skeleton::setState(const Eigen::VectorXd& _state)
@@ -253,11 +234,10 @@ void Skeleton::setState(const Eigen::VectorXd& _state)
     set_q(_state.head(_state.size() / 2));
     set_dq(_state.tail(_state.size() / 2));
     
-    for (std::vector<BodyNode*>::iterator itrBody = mBodyNodes.begin();
-         itrBody != mBodyNodes.end(); ++itrBody)
+    for (auto& it : mBodyNodes)
     {
-        (*itrBody)->updateTransform();
-        (*itrBody)->updateVelocity();
+        it->updateTransform();
+        it->updateVelocity();
     }
 }
 
@@ -333,13 +313,10 @@ void Skeleton::computeInverseDynamicsLinear(const Eigen::Vector3d& _gravity,
         return;
 
     // Forward recursion
-    for (std::vector<dynamics::BodyNode*>::iterator itrBody
-         = mBodyNodes.begin();
-         itrBody != mBodyNodes.end();
-         ++itrBody)
+    for (auto& it : mBodyNodes)
     {
-        (*itrBody)->updateEta();
-        (*itrBody)->updateAcceleration();
+        it->updateEta();
+        it->updateAcceleration();
     }
 
     // Backward recursion
@@ -360,9 +337,8 @@ void Skeleton::updateExternalForces()
     mFext.setZero();
 
     // Recursive
-    for (std::vector<BodyNode*>::iterator itr = mBodyNodes.begin();
-         itr != mBodyNodes.end(); ++itr)
-        (*itr)->aggregateExternalForces(mFext);
+    for (const auto& it : mBodyNodes)
+        it->aggregateExternalForces(mFext);
 }
 
 void Skeleton::updateDampingForces()
@@ -370,13 +346,12 @@ void Skeleton::updateDampingForces()
     // Clear external force.
     mDampingForce.setZero();
 
-    for (std::vector<BodyNode*>::iterator itr = mBodyNodes.begin();
-         itr != mBodyNodes.end(); ++itr)
+    for (const auto& it : mBodyNodes)
     {
-        Eigen::VectorXd jointDampingForce = (*itr)->getParentJoint()->getDampingForces();
+        Eigen::VectorXd jointDampingForce = it->getParentJoint()->getDampingForces();
         for (int i = 0; i < jointDampingForce.size(); i++)
         {
-            mDampingForce((*itr)->getParentJoint()->getGenCoord(i)->getSkeletonIndex()) =
+            mDampingForce(it->getParentJoint()->getGenCoord(i)->getSkeletonIndex()) =
                     jointDampingForce(i);
         }
     }
@@ -466,13 +441,11 @@ void Skeleton::computeForwardDynamicsFS(
     }
 
     // Forward recursion
-    for (std::vector<dynamics::BodyNode*>::iterator itrBody = mBodyNodes.begin();
-         itrBody != mBodyNodes.end();
-         ++itrBody)
+    for (auto& it : mBodyNodes)
     {
-        (*itrBody)->update_ddq();
-        (*itrBody)->updateAcceleration();
-        (*itrBody)->update_F_fs();
+        it->update_ddq();
+        it->updateAcceleration();
+        it->update_F_fs();
     }
 }
 

@@ -107,7 +107,7 @@ TEST(BUILDING, BASIC)
 	//--------------------------------------------------------------------------
 	//
 	//--------------------------------------------------------------------------
-    EXPECT_TRUE(body1->getParentBodyNode() == NULL);
+    EXPECT_TRUE(body1->getParentBodyNode() == nullptr);
     EXPECT_TRUE(body1->getNumChildBodyNodes() == 1);
     EXPECT_TRUE(body1->getChildBodyNode(0) == body2);
 
@@ -117,7 +117,7 @@ TEST(BUILDING, BASIC)
 
     EXPECT_TRUE(body3->getParentBodyNode() == body2);
     EXPECT_TRUE(body3->getNumChildBodyNodes() == 0);
-    //EXPECT_TRUE(body3.getChildBodyNode(0) == NULL);
+    //EXPECT_TRUE(body3.getChildBodyNode(0) == nullptr);
 
     EXPECT_TRUE(skel1->getNumBodyNodes() == 3);
     EXPECT_TRUE(skel1->getNumGenCoords() == 3);

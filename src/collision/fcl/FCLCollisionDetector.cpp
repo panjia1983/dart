@@ -113,8 +113,8 @@ bool FCLCollisionDetector::detectCollision(bool _checkAllCollisions,
                 contactPair.normal(2) = contact.normal[2];
                 contactPair.collisionNode1 = findCollisionNode(contact.o1);
                 contactPair.collisionNode2 = findCollisionNode(contact.o2);
-                assert(contactPair.collisionNode1 != NULL);
-                assert(contactPair.collisionNode2 != NULL);
+                assert(contactPair.collisionNode1 != nullptr);
+                assert(contactPair.collisionNode2 != nullptr);
                 //contactPair.bdID1 = collisionNodePair.collisionNode1->getBodyNodeID();
                 //contactPair.bdID2 = collisionNodePair.collisionNode2->getBodyNodeID();
                 contactPair.penetrationDepth = contact.penetration_depth;
@@ -169,7 +169,7 @@ CollisionNode* FCLCollisionDetector::findCollisionNode(
                 return mCollisionNodes[i];
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 } // namespace collision

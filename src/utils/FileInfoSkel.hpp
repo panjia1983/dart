@@ -48,7 +48,7 @@ namespace kinematics {
         FileInfoSkel();
         virtual ~FileInfoSkel();
 	
-        void draw(renderer::RenderInterface* _ri = NULL, const Eigen::Vector4d& _color=Eigen::Vector4d::Ones(), bool _useDefaultColor = true) const; ///< Note: _color is not used when _useDefaultColor=false
+        void draw(renderer::RenderInterface* _ri = nullptr, const Eigen::Vector4d& _color=Eigen::Vector4d::Ones(), bool _useDefaultColor = true) const; ///< Note: _color is not used when _useDefaultColor=false
         bool loadFile(const char* _filename);
         bool loadFile(const char* _filename, SkeletonFileType _type);
         bool saveFile(const char* _filename) const;
@@ -64,14 +64,14 @@ namespace kinematics {
     };
 
     template <class SkeletonType>
-    FileInfoSkel<SkeletonType>::FileInfoSkel() : mSkel(NULL){
+    FileInfoSkel<SkeletonType>::FileInfoSkel() : mSkel(nullptr){
     }
 
     template <class SkeletonType>
     FileInfoSkel<SkeletonType>::~FileInfoSkel(){
         if(mSkel){ 
             delete mSkel;
-            mSkel = NULL;
+            mSkel = nullptr;
         }
     }
 

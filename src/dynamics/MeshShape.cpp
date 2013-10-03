@@ -120,7 +120,7 @@ const aiScene* MeshShape::loadMesh(const std::string& fileName) {
                                                         aiProcess_JoinIdenticalVertices  |
                                                         aiProcess_SortByPType            |
                                                         aiProcess_OptimizeMeshes,
-                                                        NULL, propertyStore);
+                                                        nullptr, propertyStore);
     aiReleasePropertyStore(propertyStore);
 
     // Assimp rotates collada files such that the up-axis (specified in the collada file) aligns with assimp's y-axis.

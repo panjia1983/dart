@@ -48,7 +48,7 @@ namespace dart {
 namespace optimizer {
 
 Problem::Problem()
-    : mConBox(NULL), mObjBox(NULL) {
+    : mConBox(nullptr), mObjBox(nullptr) {
     mVariables.clear();
 }
 

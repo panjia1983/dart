@@ -68,9 +68,8 @@ World::~World()
     delete mIntegrator;
     delete mConstraintHandler;
 
-    for (std::vector<dynamics::Skeleton*>::const_iterator it = mSkeletons.begin();
-         it != mSkeletons.end(); ++it)
-        delete (*it);
+    for (const auto& it : mSkeletons)
+        delete it;
 }
 
 Eigen::VectorXd World::getState() const
@@ -109,13 +108,9 @@ void World::setControlInput()
 Eigen::VectorXd World::evalDeriv()
 {
     // Calculate M(q), M^{-1}(q)
-    for (std::vector<dynamics::Skeleton*>::iterator itrSkeleton = mSkeletons.begin();
-         itrSkeleton != mSkeletons.end();
-         ++itrSkeleton)
-    {
-        (*itrSkeleton)->computeEquationsOfMotionID(mGravity);
-        //(*itrSkeleton)->computeEquationsOfMotionFS(mGravity);
-    }
+    for (auto& it : mSkeletons)
+        it->computeEquationsOfMotionID(mGravity);
+        //it->computeEquationsOfMotionFS(mGravity);
 
     // compute constraint (contact/contact, joint limit) forces
     mConstraintHandler->computeConstraintForces();
@@ -132,12 +127,10 @@ Eigen::VectorXd World::evalDeriv()
     }
 
     // compute forward dynamics
-    for (std::vector<dynamics::Skeleton*>::iterator itrSkeleton = mSkeletons.begin();
-         itrSkeleton != mSkeletons.end();
-         ++itrSkeleton)
+    for (auto& it : mSkeletons)
     {
-        //(*itrSkeleton)->computeForwardDynamicsID(mGravity);
-        (*itrSkeleton)->computeForwardDynamicsFS(mGravity);
+        //it->computeForwardDynamicsID(mGravity);
+        it->computeForwardDynamicsFS(mGravity);
     }
 
     // compute derivatives for integration
@@ -176,11 +169,10 @@ void World::step()
 {
     mIntegrator->integrate(this, mTimeStep);
 
-    for (std::vector<dynamics::Skeleton*>::iterator itr = mSkeletons.begin();
-         itr != mSkeletons.end(); ++itr)
+    for (const auto& it : mSkeletons)
     {
-        (*itr)->clearInternalForces();
-        (*itr)->clearExternalForces();
+        it->clearInternalForces();
+        it->clearExternalForces();
     }
 
     mTime += mTimeStep;
@@ -219,16 +211,11 @@ dynamics::Skeleton* World::getSkeleton(int _index) const
 
 dynamics::Skeleton* World::getSkeleton(const std::string& _name) const
 {
-    for (std::vector<dynamics::Skeleton*>::const_iterator itrSkeleton
-         = mSkeletons.begin();
-         itrSkeleton != mSkeletons.end();
-         ++itrSkeleton)
-    {
-        if ((*itrSkeleton)->getName() == _name)
-            return *itrSkeleton;
-    }
+    for (const auto& it : mSkeletons)
+        if (it->getName() == _name)
+            return it;
 
-    return NULL;
+    return nullptr;
 }
 
 int World::getNumSkeletons() const
@@ -238,7 +225,7 @@ int World::getNumSkeletons() const
 
 void World::addSkeleton(dynamics::Skeleton* _skeleton)
 {
-    assert(_skeleton != NULL && "Invalid skeleton.");
+    assert(_skeleton != nullptr && "Invalid skeleton.");
 
     // If mSkeletons already has _skeleton, then we do nothing.
     if (find(mSkeletons.begin(), mSkeletons.end(), _skeleton) !=
@@ -258,7 +245,7 @@ void World::addSkeleton(dynamics::Skeleton* _skeleton)
 
 void World::removeSkeleton(dynamics::Skeleton* _skeleton)
 {
-    assert(_skeleton != NULL && "Invalid skeleton.");
+    assert(_skeleton != nullptr && "Invalid skeleton.");
 
     // Find index of _skeleton in mSkeleton.
     int i = 0;

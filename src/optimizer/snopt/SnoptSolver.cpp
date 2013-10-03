@@ -24,7 +24,7 @@ namespace snopt {
 
 SnoptSolver::SnoptSolver(Problem *problem)
     : Solver(problem) {
-    mSnopt = NULL;
+    mSnopt = nullptr;
 
     mNoDisplay = false;
     mSolverIter = 10;
@@ -173,9 +173,9 @@ int SnoptSolver::iterUpdate(long mask, int compute_gradients, double *coefs, voi
 }
 
 void SnoptSolver::resetSolver() {
-    if(mSnopt != NULL){
+    if(mSnopt != nullptr){
         delete mSnopt;
-        mSnopt = NULL;
+        mSnopt = nullptr;
     }
 
     mSnopt = new SnoptInterface(1, &conBox()->mJac, &conBox()->mJacMap, &conBox()->mCon, &objBox()->mObj, &objBox()->mObjGrad, SnoptSolver::iterUpdate, this);

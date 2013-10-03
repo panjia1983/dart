@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
                   //DART_DATA_PATH"/skel/test/gazebo/force_torque_test.skel");
                   //DART_DATA_PATH"/skel/test/chainwhipa.skel");
                   DART_DATA_PATH"/skel/test/double_pendulum_with_base.skel");
-    assert(myWorld != NULL);
+    assert(myWorld != nullptr);
 
     // create a window and link it to the world
     MyWindow window;

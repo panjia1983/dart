@@ -125,7 +125,7 @@ static void uivector_cleanup(void* p)
 {
   ((uivector*)p)->size = ((uivector*)p)->allocsize = 0;
   myfree(((uivector*)p)->data);
-  ((uivector*)p)->data = NULL;
+  ((uivector*)p)->data = nullptr;
 }
 
 /*returns 1 if success, 0 if failure ==> nothing done*/
@@ -158,7 +158,7 @@ static unsigned uivector_resizev(uivector* p, size_t size, unsigned value)
 
 static void uivector_init(uivector* p)
 {
-  p->data = NULL;
+  p->data = nullptr;
   p->size = p->allocsize = 0;
 }
 
@@ -226,12 +226,12 @@ static void ucvector_cleanup(void* p)
 {
   ((ucvector*)p)->size = ((ucvector*)p)->allocsize = 0;
   myfree(((ucvector*)p)->data);
-  ((ucvector*)p)->data = NULL;
+  ((ucvector*)p)->data = nullptr;
 }
 
 static void ucvector_init(ucvector* p)
 {
-  p->data = NULL;
+  p->data = nullptr;
   p->size = p->allocsize = 0;
 }
 
@@ -278,7 +278,7 @@ static unsigned string_resize(char** out, size_t size)
   char* data = (char*)myrealloc(*out, size + 1);
   if(data)
   {
-    data[size] = 0; /*null termination char*/
+    data[size] = 0; /*nullptr termination char*/
     *out = data;
   }
   return data != 0;
@@ -287,7 +287,7 @@ static unsigned string_resize(char** out, size_t size)
 /*init a {char*, size_t} pair for use as string*/
 static void string_init(char** out)
 {
-  *out = NULL;
+  *out = nullptr;
   string_resize(out, 0);
 }
 
@@ -295,7 +295,7 @@ static void string_init(char** out)
 static void string_cleanup(char** out)
 {
   myfree(*out);
-  *out = NULL;
+  *out = nullptr;
 }
 
 static void string_set(char** out, const char* in)
@@ -2131,7 +2131,7 @@ static unsigned zlib_decompress(unsigned char** out, size_t* outsize, const unsi
 unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in,
                                size_t insize, const LodePNGCompressSettings* settings)
 {
-  /*initially, *out must be NULL and outsize 0, if you just give some random *out
+  /*initially, *out must be nullptr and outsize 0, if you just give some random *out
   that's pointing to a non allocated buffer, this'll crash*/
   ucvector outv;
   size_t i;
@@ -2356,7 +2356,7 @@ void lodepng_chunk_type(char type[5], const unsigned char* chunk)
 {
   unsigned i;
   for(i = 0; i < 4; i++) type[i] = chunk[4 + i];
-  type[4] = 0; /*null termination char*/
+  type[4] = 0; /*nullptr termination char*/
 }
 
 unsigned char lodepng_chunk_type_equals(const unsigned char* chunk, const char* type)
@@ -2680,8 +2680,8 @@ static unsigned LodePNGUnknownChunks_copy(LodePNGInfo* dest, const LodePNGInfo* 
 static void LodePNGText_init(LodePNGInfo* info)
 {
   info->text_num = 0;
-  info->text_keys = NULL;
-  info->text_strings = NULL;
+  info->text_keys = nullptr;
+  info->text_strings = nullptr;
 }
 
 static void LodePNGText_cleanup(LodePNGInfo* info)
@@ -2743,10 +2743,10 @@ unsigned lodepng_add_text(LodePNGInfo* info, const char* key, const char* str)
 static void LodePNGIText_init(LodePNGInfo* info)
 {
   info->itext_num = 0;
-  info->itext_keys = NULL;
-  info->itext_langtags = NULL;
-  info->itext_transkeys = NULL;
-  info->itext_strings = NULL;
+  info->itext_keys = nullptr;
+  info->itext_langtags = nullptr;
+  info->itext_transkeys = nullptr;
+  info->itext_strings = nullptr;
 }
 
 static void LodePNGIText_cleanup(LodePNGInfo* info)
@@ -2903,7 +2903,7 @@ than an octree, but this is only used to count up to 256 so it's good enough.
 */
 struct ColorTree
 {
-  ColorTree* next; /*null, or array of 256 pointers to ColorTree of next level*/
+  ColorTree* next; /*nullptr, or array of 256 pointers to ColorTree of next level*/
   int index; /*the payload. Only has a meaningful value if this is in the 4th level*/
 };
 
@@ -4200,7 +4200,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
 
           length = 0;
           while(length < chunkLength && data[length] != 0) length++;
-          /*error, end reached, no null terminator?*/
+          /*error, end reached, no nullptr terminator?*/
           if(length + 1 >= chunkLength) CERROR_BREAK(state->error, 75);
 
           key = (char*)mymalloc(length + 1);
@@ -4210,7 +4210,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
           for(i = 0; i < length; i++) key[i] = data[i];
 
           string2_begin = length + 1;
-          /*error, end reached, no null terminator?*/
+          /*error, end reached, no nullptr terminator?*/
           if(string2_begin > chunkLength) CERROR_BREAK(state->error, 75);
 
           length = chunkLength - string2_begin;
@@ -4243,7 +4243,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
         while(!state->error) /*not really a while loop, only used to break on error*/
         {
           for(length = 0; length < chunkLength && data[length] != 0; length++) ;
-          if(length + 2 >= chunkLength) CERROR_BREAK(state->error, 75); /*no null termination, corrupt?*/
+          if(length + 2 >= chunkLength) CERROR_BREAK(state->error, 75); /*no nullptr termination, corrupt?*/
 
           key = (char*)mymalloc(length + 1);
           if(!key) CERROR_BREAK(state->error, 83); /*alloc fail*/
@@ -4254,7 +4254,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
           if(data[length + 1] != 0) CERROR_BREAK(state->error, 72); /*the 0 byte indicating compression must be 0*/
 
           string2_begin = length + 2;
-          if(string2_begin > chunkLength) CERROR_BREAK(state->error, 75); /*no null termination, corrupt?*/
+          if(string2_begin > chunkLength) CERROR_BREAK(state->error, 75); /*no nullptr termination, corrupt?*/
 
           length = chunkLength - string2_begin;
           state->error = zlib_decompress(&decoded.data, &decoded.size,
@@ -4291,7 +4291,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
 
           /*read the key*/
           for(length = 0; length < chunkLength && data[length] != 0; length++) ;
-          if(length + 2 >= chunkLength) CERROR_BREAK(state->error, 75); /*no null termination char found*/
+          if(length + 2 >= chunkLength) CERROR_BREAK(state->error, 75); /*no nullptr termination char found*/
 
           key = (char*)mymalloc(length + 1);
           if(!key) CERROR_BREAK(state->error, 83); /*alloc fail*/
@@ -4307,7 +4307,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
           begin = length + 3;
           length = 0;
           for(i = begin; i < chunkLength && data[i] != 0; i++) length++;
-          if(begin + length + 1 >= chunkLength) CERROR_BREAK(state->error, 75); /*no null termination char found*/
+          if(begin + length + 1 >= chunkLength) CERROR_BREAK(state->error, 75); /*no nullptr termination char found*/
 
           langtag = (char*)mymalloc(length + 1);
           if(!langtag) CERROR_BREAK(state->error, 83); /*alloc fail*/
@@ -4319,7 +4319,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
           begin += length + 1;
           length = 0;
           for(i = begin; i < chunkLength && data[i] != 0; i++) length++;
-          if(begin + length + 1 >= chunkLength) CERROR_BREAK(state->error, 75); /*no null termination, corrupt?*/
+          if(begin + length + 1 >= chunkLength) CERROR_BREAK(state->error, 75); /*no nullptr termination, corrupt?*/
 
           transkey = (char*)mymalloc(length + 1);
           if(!transkey) CERROR_BREAK(state->error, 83); /*alloc fail*/
@@ -4329,7 +4329,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
 
           /*read the actual text*/
           begin += length + 1;
-          if(begin > chunkLength) CERROR_BREAK(state->error, 75); /*no null termination, corrupt?*/
+          if(begin > chunkLength) CERROR_BREAK(state->error, 75); /*no nullptr termination, corrupt?*/
 
           length = chunkLength - begin;
 
@@ -4762,13 +4762,13 @@ static unsigned addChunk_iTXt(ucvector* out, unsigned compressed, const char* ke
   ucvector_init(&data);
 
   for(i = 0; keyword[i] != 0; i++) ucvector_push_back(&data, (unsigned char)keyword[i]);
-  ucvector_push_back(&data, 0); /*null termination char*/
+  ucvector_push_back(&data, 0); /*nullptr termination char*/
   ucvector_push_back(&data, compressed ? 1 : 0); /*compression flag*/
   ucvector_push_back(&data, 0); /*compression method*/
   for(i = 0; langtag[i] != 0; i++) ucvector_push_back(&data, (unsigned char)langtag[i]);
-  ucvector_push_back(&data, 0); /*null termination char*/
+  ucvector_push_back(&data, 0); /*nullptr termination char*/
   for(i = 0; transkey[i] != 0; i++) ucvector_push_back(&data, (unsigned char)transkey[i]);
-  ucvector_push_back(&data, 0); /*null termination char*/
+  ucvector_push_back(&data, 0); /*nullptr termination char*/
 
   if(compressed)
   {
@@ -5644,7 +5644,7 @@ const char* lodepng_error_text(unsigned code)
     case 73: return "invalid tIME chunk size";
     case 74: return "invalid pHYs chunk size";
     /*length could be wrong, or data chopped off*/
-    case 75: return "no null termination char found while decoding text chunk";
+    case 75: return "no nullptr termination char found while decoding text chunk";
     case 76: return "iTXt chunk too short to contain required bytes";
     case 77: return "integer overflow in buffer size";
     case 78: return "failed to open file for reading"; /*file doesn't exist or couldn't be opened for reading*/

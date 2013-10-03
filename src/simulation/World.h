@@ -135,7 +135,7 @@ public:
     /// @brief Find body node by name.
     /// @param[in] The name of body node looking for.
     /// @return Searched body node. If the skeleton does not have a body
-    /// node with _name, then return NULL.
+    /// node with _name, then return nullptr.
     dynamics::Skeleton* getSkeleton(const std::string& _name) const;
 
     /// @brief Get the number of skeletons.

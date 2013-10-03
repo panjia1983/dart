@@ -52,7 +52,7 @@ void draw (const RRT* t1, const RRT* t2) {
 	FILE* data = fopen(".data", "w");
 	size_t step = numDofs * 7;											// 7 characters per double
 	size_t numEdges1 = (t1->configVector.size() - 1);
-	size_t numEdges2 = ((t2 == NULL) ? 0 : t2->configVector.size() - 1);
+	size_t numEdges2 = ((t2 == nullptr) ? 0 : t2->configVector.size() - 1);
 	char* line1 = new char[(numEdges1 + numEdges2 + 5) * step];
 	char* line2 = new char[(numEdges1 + numEdges2 + 5) * step];
 
@@ -62,7 +62,7 @@ void draw (const RRT* t1, const RRT* t2) {
 	for(size_t t = 0; t < 2; t++) {
 
 		// Skip the tree if not there
-		if(trees[t] == NULL) continue;
+		if(trees[t] == nullptr) continue;
 
 		// Draw the edges
 		size_t numEdges = trees[t]->configVector.size() - 1;
@@ -146,7 +146,7 @@ void drawThreeLink () {
 
     // Print the nodes
     RRT* rrt = planner.start_rrt;
-    draw(rrt, NULL);
+    draw(rrt, nullptr);
 }
 
 /// Visualizes a 2D RRT
@@ -168,7 +168,7 @@ void drawTwoLink () {
 
     // Print the nodes
     RRT* rrt = planner.start_rrt;
-    draw(rrt, NULL);
+    draw(rrt, nullptr);
 
 }
 

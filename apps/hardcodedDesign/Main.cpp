@@ -28,7 +28,7 @@ enum TypeOfDOF {
 Joint* create1DOFJoint(double val, double min, double max, int type) {
 
     // Create the transformation based on the type
-    Joint* newJoint = NULL;
+    Joint* newJoint = nullptr;
     if(type == DOF_X)
         newJoint = new PrismaticJoint(Eigen::Vector3d(1.0, 0.0, 0.0));
     else if(type == DOF_Y)

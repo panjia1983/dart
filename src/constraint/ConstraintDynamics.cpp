@@ -20,7 +20,7 @@ namespace constraint {
 
 ConstraintDynamics::ConstraintDynamics(const std::vector<dynamics::Skeleton*>& _skeletons, double _dt, double _mu, int _d, bool _useODE, collision::CollisionDetector* _collisionDetector)
     : mSkeletons(_skeletons), mDt(_dt), mMu(_mu), mNumDir(_d), mCollisionDetector(_collisionDetector), mUseODELCPSolver(_useODE) {
-    assert(_collisionDetector != NULL && "Invalid collision detector.");
+    assert(_collisionDetector != nullptr && "Invalid collision detector.");
     initialize();
 }
 
@@ -126,7 +126,7 @@ void ConstraintDynamics::deleteConstraint(int _index) {
 
 void ConstraintDynamics::addSkeleton(dynamics::Skeleton* _skeleton)
 {
-    assert(_skeleton != NULL && "Invalid skeleton.");
+    assert(_skeleton != nullptr && "Invalid skeleton.");
 
     // If mSkeletons already has _skeleton, then we do nothing.
     if (find(mSkeletons.begin(), mSkeletons.end(), _skeleton) !=
@@ -173,7 +173,7 @@ void ConstraintDynamics::addSkeleton(dynamics::Skeleton* _skeleton)
 
 void ConstraintDynamics::removeSkeleton(dynamics::Skeleton* _skeleton)
 {
-    assert(_skeleton != NULL && "Invalid skeleton.");
+    assert(_skeleton != nullptr && "Invalid skeleton.");
 
     // Find index of _skeleton in mSkeleton.
     int iSkeleton = 0;
@@ -234,15 +234,15 @@ void ConstraintDynamics::removeSkeleton(dynamics::Skeleton* _skeleton)
 
 void ConstraintDynamics::setCollisionDetector(CollisionDetector* _collisionDetector)
 {
-    assert(_collisionDetector != NULL && "Invalid collision detector.");
+    assert(_collisionDetector != nullptr && "Invalid collision detector.");
 
     if (_collisionDetector == mCollisionDetector)
         return;
 
-    if (mCollisionDetector != NULL)
+    if (mCollisionDetector != nullptr)
     {
         delete mCollisionDetector;
-        mCollisionDetector = NULL;
+        mCollisionDetector = nullptr;
     }
 
     mCollisionDetector = _collisionDetector;

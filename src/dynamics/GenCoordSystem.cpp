@@ -63,7 +63,7 @@ GenCoord* GenCoordSystem::getGenCoord(const std::string& _name) const
         if (mGenCoords[i]->getName() == _name)
             return mGenCoords[i];
 
-    return NULL;
+    return nullptr;
 }
 
 void GenCoordSystem::set_q(const Eigen::VectorXd& _q)

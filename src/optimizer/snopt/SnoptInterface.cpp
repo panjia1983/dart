@@ -16,7 +16,7 @@ namespace snopt {
 #include <assert.h>
 //#include <FL/Fl.H>
 
-SnoptInterface* SnoptInterface::mRef = NULL;
+SnoptInterface* SnoptInterface::mRef = nullptr;
 
 SnoptInterface::SnoptInterface(int constr_tot, int coef_tot, int nonlin_constr_tot,
                                int nonlin_obj, int nonlin_jac, int *c_eqns, int has_obj,
@@ -34,7 +34,7 @@ SnoptInterface::SnoptInterface(int constr_tot, int coef_tot, int nonlin_constr_t
     if(mNumConstr != 0)
         mConstrEqns = new int[mNumConstr];
     else
-        mConstrEqns = NULL;
+        mConstrEqns = nullptr;
 
     for(int i = 0; i < mNumConstr; i++)
         mConstrEqns[i] = c_eqns[i];
@@ -52,8 +52,8 @@ SnoptInterface::SnoptInterface(int constr_tot, int coef_tot, int nonlin_constr_t
     mUpdateFunc = update_f;
     mUpdateData = update_d;
 
-    mBoundsLo = NULL;
-    mBoundsHi = NULL;
+    mBoundsLo = nullptr;
+    mBoundsHi = nullptr;
 
     mOutput = 0;
     mSum = 0;
@@ -70,9 +70,9 @@ SnoptInterface::SnoptInterface(int has_obj, VVD J, VVB JMap, std::vector<double>
                                SnoptInterface::updateFunc update_f, void *update_d) {
     mHasObjective = has_obj;
 
-    mConstrEqns = NULL;
-    mSolverX = NULL;
-    mProblemX = NULL;
+    mConstrEqns = nullptr;
+    mSolverX = nullptr;
+    mProblemX = nullptr;
 
     mdConstrdCoef = J;
     mCoefMap = JMap;
@@ -103,7 +103,7 @@ SnoptInterface::~SnoptInterface() {
     // delete[] lo_bounds;
     // delete[] hi_bounds;
 
-    mRef = NULL;
+    mRef = nullptr;
 }
 
 void SnoptInterface::clear(long mask, int compute_derivs) {
@@ -142,13 +142,13 @@ void SnoptInterface::resizeJacobian(int coef_tot, int nonlin_coef_tot,
     mNumNonlinJacCoef = nonlin_coef_tot;
 
     // modify constraint type for each constraint
-    if (mConstrEqns != NULL)
+    if (mConstrEqns != nullptr)
         delete[] mConstrEqns;
 
     if(mNumConstr != 0)
         mConstrEqns = new int[mNumConstr];
     else
-        mConstrEqns = NULL;
+        mConstrEqns = nullptr;
 
     for(int i = 0; i < mNumConstr; i++)
         mConstrEqns[i] = 0;
@@ -269,7 +269,7 @@ S1USER(int *iAbort, char *MjrMsg, int *KTcond,
     SnoptInterface *s = SnoptInterface::mRef;
     /*
                 char *found;
-                  if((found = strstr(MjrMsg, "i")) != NULL){
+                  if((found = strstr(MjrMsg, "i")) != nullptr){
                   cout << "Infeasible QP found" << endl;
                   s->mAbnormal = SnoptInterface::INFEASIBLE;
                   s->mTermination = true;
@@ -277,11 +277,11 @@ S1USER(int *iAbort, char *MjrMsg, int *KTcond,
 
                   }
                 */
-    /*    if((found = strstr(MjrMsg, "n")) != NULL){
+    /*    if((found = strstr(MjrMsg, "n")) != nullptr){
                       cout << "Hessian does not update" << endl;
                       s->mAbnormal = SnoptInterface::HESSIAN_UPDATE;
                       }
-                      if((found = strstr(MjrMsg, "sR")) != NULL){
+                      if((found = strstr(MjrMsg, "sR")) != nullptr){
                       cout << "Hessian reset abnormally" << endl;
                       s->mAbnormal = SnoptInterface::HESSIAN_RESET;
                       }*/
@@ -369,9 +369,9 @@ SnoptInterface::Return SnoptInterface::solve(double *x, double *lo_bounds,
     update(SnoptInterface::Obj | SnoptInterface::Constr, 1, mSolverX);
 
     // set the jacobian
-    double *a = NULL;
-    int *ha = NULL;
-    int *ka = NULL;
+    double *a = nullptr;
+    int *ha = nullptr;
+    int *ka = nullptr;
     fillUpSnoptFormat(mdConstrdCoef, &a, &ha, &ka);
 
     static int lencw = 1000 * sizeof(char[8]);
@@ -494,7 +494,7 @@ void  SnoptInterface::snoptObj(int *mode, int *nn_obj, double *x,
                                double *ru, int *lenru) {
 
     SnoptInterface *s = SnoptInterface::mRef;
-    assert(s != NULL);
+    assert(s != nullptr);
 
     s->update(SnoptInterface::Obj, *mode, x);
 
@@ -513,7 +513,7 @@ void SnoptInterface::snoptJac(int *mode, int *nn_con, int *nn_jac, int *ne_jac,
                               int *iu, int *leniu,
                               double *ru, int *lenru) {
     SnoptInterface *s = SnoptInterface::mRef;
-    assert(s != NULL);
+    assert(s != nullptr);
     if(s->mNumConstr == 0){
         f_con[0] = 0.0;
         return;
@@ -552,11 +552,11 @@ void SnoptInterface::fillUpSnoptFormat(VVD jacobian, double **a, int **ha, int *
         nElts += (1 > nonZeroInCol[j]) ? 1 : nonZeroInCol[j];
     }
 
-    if(*a != NULL)
+    if(*a != nullptr)
         delete[] *a;
-    if(*ha != NULL)
+    if(*ha != nullptr)
         delete[] *ha;
-    if(*ka != NULL)
+    if(*ka != nullptr)
         delete[] *ka;
     *a = new double[nElts];
     *ha = new int[nElts];

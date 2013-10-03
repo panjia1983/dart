@@ -36,15 +36,15 @@ simulation::World* SdfParser::readSdfFile(const std::string& _filename)
     catch(std::exception const& e)
     {
         std::cout << "LoadFile Fails: " << e.what() << std::endl;
-        return NULL;
+        return nullptr;
     }
 
     //--------------------------------------------------------------------------
     // Load DART
-    tinyxml2::XMLElement* sdfElement = NULL;
+    tinyxml2::XMLElement* sdfElement = nullptr;
     sdfElement = _dartFile.FirstChildElement("sdf");
-    if (sdfElement == NULL)
-        return NULL;
+    if (sdfElement == nullptr)
+        return nullptr;
 
     //--------------------------------------------------------------------------
     // version attribute
@@ -55,15 +55,15 @@ simulation::World* SdfParser::readSdfFile(const std::string& _filename)
         dterr << "The file format of ["
           << _filename
           << "] is not sdf 1.4. Please try with sdf 1.4." << std::endl;
-        return NULL;
+        return nullptr;
     }
 
     //--------------------------------------------------------------------------
     // Load World
-    tinyxml2::XMLElement* worldElement = NULL;
+    tinyxml2::XMLElement* worldElement = nullptr;
     worldElement = sdfElement->FirstChildElement("world");
-    if (worldElement == NULL)
-        return NULL;
+    if (worldElement == nullptr)
+        return nullptr;
 
     simulation::World* newWorld = readWorld(worldElement);
 
@@ -72,7 +72,7 @@ simulation::World* SdfParser::readSdfFile(const std::string& _filename)
 
 simulation::World* SdfParser::readWorld(tinyxml2::XMLElement* _worldElement)
 {
-    assert(_worldElement != NULL);
+    assert(_worldElement != nullptr);
 
     // Create a world
     simulation::World* newWorld = new simulation::World;
@@ -136,8 +136,8 @@ void SdfParser::readPhysics(tinyxml2::XMLElement* _physicsElement,
 dynamics::Skeleton* SdfParser::readSkeleton(tinyxml2::XMLElement* _skeletonElement,
                                  simulation::World* _world)
 {
-    assert(_skeletonElement != NULL);
-    assert(_world != NULL);
+    assert(_skeletonElement != nullptr);
+    assert(_world != nullptr);
 
     dynamics::Skeleton* newSkeleton = new dynamics::Skeleton;
     Eigen::Isometry3d skeletonFrame = Eigen::Isometry3d::Identity();
@@ -189,7 +189,7 @@ dynamics::Skeleton* SdfParser::readSkeleton(tinyxml2::XMLElement* _skeletonEleme
     {
         dynamics::BodyNode* bodyNode = sdfBodyNodes[i].bodyNode;
 
-        if (bodyNode->getParentJoint() == NULL)
+        if (bodyNode->getParentJoint() == nullptr)
         {
             // If this link has no parent joint, then we add 6-dof free joint.
             dynamics::FreeJoint* newFreeJoint = new dynamics::FreeJoint;
@@ -203,9 +203,8 @@ dynamics::Skeleton* SdfParser::readSkeleton(tinyxml2::XMLElement* _skeletonEleme
         }
     }
 
-    for (std::vector<SDFBodyNode, Eigen::aligned_allocator<SDFBodyNode> >::iterator it = sdfBodyNodes.begin();
-         it != sdfBodyNodes.end(); ++it)
-        newSkeleton->addBodyNode((*it).bodyNode);
+    for (const auto& it : sdfBodyNodes)
+        newSkeleton->addBodyNode(it.bodyNode);
 
     return newSkeleton;
 }
@@ -215,8 +214,8 @@ SdfParser::SDFBodyNode SdfParser::readBodyNode(
         dynamics::Skeleton* _skeleton,
         const Eigen::Isometry3d& _skeletonFrame)
 {
-    assert(_bodyNodeElement != NULL);
-    assert(_skeleton != NULL);
+    assert(_bodyNodeElement != nullptr);
+    assert(_skeleton != nullptr);
 
     dynamics::BodyNode* newBodyNode = new dynamics::BodyNode;
     Eigen::Isometry3d initTransform = Eigen::Isometry3d::Identity();
@@ -310,7 +309,7 @@ SdfParser::SDFBodyNode SdfParser::readBodyNode(
 
             newBodyNode->setInertia(ixx, iyy, izz, ixy, ixz, iyz);
         }
-        else if (newBodyNode->getVisualizationShape(0) != NULL)
+        else if (newBodyNode->getVisualizationShape(0) != nullptr)
         {
             Eigen::Matrix3d Ic =
                     newBodyNode->getVisualizationShape(0)->computeInertia(
@@ -330,7 +329,7 @@ SdfParser::SDFBodyNode SdfParser::readBodyNode(
 
 dynamics::Shape* SdfParser::readShape(tinyxml2::XMLElement* _shapelement)
 {
-    dynamics::Shape* newShape = NULL;
+    dynamics::Shape* newShape = nullptr;
 
     // type
     assert(hasElement(_shapelement, "geometry"));
@@ -393,9 +392,9 @@ dynamics::Shape* SdfParser::readShape(tinyxml2::XMLElement* _shapelement)
 dynamics::Joint* SdfParser::readJoint(tinyxml2::XMLElement* _jointElement,
                             const std::vector<SDFBodyNode, Eigen::aligned_allocator<SDFBodyNode> >& _sdfBodyNodes)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
-    dynamics::Joint* newJoint = NULL;
+    dynamics::Joint* newJoint = nullptr;
 
     //--------------------------------------------------------------------------
     // Type attribute
@@ -411,7 +410,7 @@ dynamics::Joint* SdfParser::readJoint(tinyxml2::XMLElement* _jointElement,
         newJoint = readUniversalJoint(_jointElement);
     if (type == std::string("ball"))
         newJoint = readBallJoint(_jointElement);
-    assert(newJoint != NULL);
+    assert(newJoint != nullptr);
 
     //--------------------------------------------------------------------------
     // Name attribute
@@ -421,7 +420,7 @@ dynamics::Joint* SdfParser::readJoint(tinyxml2::XMLElement* _jointElement,
     //--------------------------------------------------------------------------
     // parent
     SDFBodyNode sdfParentBodyNode;
-    sdfParentBodyNode.bodyNode = NULL;
+    sdfParentBodyNode.bodyNode = nullptr;
     sdfParentBodyNode.initTransform = Eigen::Isometry3d::Identity();
 
     if (hasElement(_jointElement, "parent"))
@@ -430,15 +429,14 @@ dynamics::Joint* SdfParser::readJoint(tinyxml2::XMLElement* _jointElement,
 
         if (strParent != std::string("world"))
         {
-            for (std::vector<SDFBodyNode, Eigen::aligned_allocator<SDFBodyNode> >::const_iterator it =
-                 _sdfBodyNodes.begin(); it != _sdfBodyNodes.end(); ++it)
-                if ((*it).bodyNode->getName() == strParent)
+            for (const auto& it : _sdfBodyNodes)
+                if (it.bodyNode->getName() == strParent)
                 {
-                    sdfParentBodyNode = (*it);
+                    sdfParentBodyNode = it;
                     break;
                 }
 
-            if (sdfParentBodyNode.bodyNode == NULL)
+            if (sdfParentBodyNode.bodyNode == nullptr)
             {
                 dterr << "Can't find the parent body ["
                   << strParent
@@ -459,24 +457,21 @@ dynamics::Joint* SdfParser::readJoint(tinyxml2::XMLElement* _jointElement,
     //--------------------------------------------------------------------------
     // child
     SDFBodyNode sdfChildBodyNode;
-    sdfChildBodyNode.bodyNode = NULL;
+    sdfChildBodyNode.bodyNode = nullptr;
     sdfChildBodyNode.initTransform = Eigen::Isometry3d::Identity();
 
     if (hasElement(_jointElement, "child"))
     {
         std::string strChild = getValueString(_jointElement, "child");
 
-        for (std::vector<SDFBodyNode, Eigen::aligned_allocator<SDFBodyNode> >::const_iterator it =
-             _sdfBodyNodes.begin(); it != _sdfBodyNodes.end(); ++it)
-        {
-            if ((*it).bodyNode->getName() == strChild)
+        for (const auto& it : _sdfBodyNodes)
+            if (it.bodyNode->getName() == strChild)
             {
-                sdfChildBodyNode = (*it);
+                sdfChildBodyNode = it;
                 break;
             }
-        }
 
-        if (sdfChildBodyNode.bodyNode == NULL)
+        if (sdfChildBodyNode.bodyNode == nullptr)
         {
             dterr << "Can't find the child body ["
               << strChild
@@ -516,7 +511,7 @@ dynamics::Joint* SdfParser::readJoint(tinyxml2::XMLElement* _jointElement,
 
 dynamics::WeldJoint* SdfParser::readWeldJoint(tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::WeldJoint* newWeldJoint = new dynamics::WeldJoint;
 
@@ -526,7 +521,7 @@ dynamics::WeldJoint* SdfParser::readWeldJoint(tinyxml2::XMLElement* _jointElemen
 dynamics::RevoluteJoint* SdfParser::readRevoluteJoint(
         tinyxml2::XMLElement* _revoluteJointElement)
 {
-    assert(_revoluteJointElement != NULL);
+    assert(_revoluteJointElement != nullptr);
 
     dynamics::RevoluteJoint* newRevoluteJoint = new dynamics::RevoluteJoint;
 
@@ -587,7 +582,7 @@ dynamics::RevoluteJoint* SdfParser::readRevoluteJoint(
 dynamics::PrismaticJoint* SdfParser::readPrismaticJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::PrismaticJoint* newPrismaticJoint = new dynamics::PrismaticJoint;
 
@@ -648,7 +643,7 @@ dynamics::PrismaticJoint* SdfParser::readPrismaticJoint(
 dynamics::ScrewJoint* SdfParser::readScrewJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::ScrewJoint* newScrewJoint = new dynamics::ScrewJoint;
 
@@ -716,7 +711,7 @@ dynamics::ScrewJoint* SdfParser::readScrewJoint(
 dynamics::UniversalJoint* SdfParser::readUniversalJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::UniversalJoint* newUniversalJoint = new dynamics::UniversalJoint;
 
@@ -828,7 +823,7 @@ dynamics::UniversalJoint* SdfParser::readUniversalJoint(
 dynamics::BallJoint* SdfParser::readBallJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::BallJoint* newBallJoint = new dynamics::BallJoint;
 
@@ -838,7 +833,7 @@ dynamics::BallJoint* SdfParser::readBallJoint(
 dynamics::TranslationalJoint* SdfParser::readTranslationalJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::TranslationalJoint* newTranslationalJoint
             = new dynamics::TranslationalJoint;
@@ -849,7 +844,7 @@ dynamics::TranslationalJoint* SdfParser::readTranslationalJoint(
 dynamics::FreeJoint* SdfParser::readFreeJoint(
         tinyxml2::XMLElement* _jointElement)
 {
-    assert(_jointElement != NULL);
+    assert(_jointElement != nullptr);
 
     dynamics::FreeJoint* newFreeJoint = new dynamics::FreeJoint;
 
