@@ -41,7 +41,7 @@
 
 int _dSafeNormalize3 (dVector3 a)
 {
-  assert(a);
+  dAASSERT (a);
 
   int idx;
   dReal aa[3], l;
@@ -118,7 +118,7 @@ void dNormalize3(dVector3 a)
 
 int _dSafeNormalize4 (dVector4 a)
 {
-  assert(a);
+  dAASSERT (a);
 
   dReal l = dCalcVectorDot3(a,a)+a[3]*a[3];
 
@@ -152,7 +152,7 @@ void dNormalize4(dVector4 a)
 
 void dPlaneSpace (const dVector3 n, dVector3 p, dVector3 q)
 {
-  assert(n && p && q);
+  dAASSERT (n && p && q);
   if (dFabs(n[2]) > M_SQRT1_2) {
     // choose p in y-z plane
     dReal a = n[1]*n[1] + n[2]*n[2];

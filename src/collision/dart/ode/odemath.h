@@ -24,7 +24,6 @@
 #define _ODE_ODEMATH_H_
 
 #include "common.h"
-#include <cassert>
 #include <cmath>
 
 /*
@@ -44,7 +43,7 @@
 
 
 // Some vector math
-inline void dAddVectors3(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dAddVectors3(dReal *res, const dReal *a, const dReal *b)
 {
   dReal res_0, res_1, res_2;
   res_0 = a[0] + b[0];
@@ -54,7 +53,7 @@ inline void dAddVectors3(dReal *res, const dReal *a, const dReal *b)
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline void dSubtractVectors3(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dSubtractVectors3(dReal *res, const dReal *a, const dReal *b)
 {
   dReal res_0, res_1, res_2;
   res_0 = a[0] - b[0];
@@ -64,7 +63,7 @@ inline void dSubtractVectors3(dReal *res, const dReal *a, const dReal *b)
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline void dAddScaledVectors3(dReal *res, const dReal *a, const dReal *b, dReal a_scale, dReal b_scale)
+PURE_INLINE void dAddScaledVectors3(dReal *res, const dReal *a, const dReal *b, dReal a_scale, dReal b_scale)
 {
   dReal res_0, res_1, res_2;
   res_0 = a_scale * a[0] + b_scale * b[0];
@@ -74,21 +73,21 @@ inline void dAddScaledVectors3(dReal *res, const dReal *a, const dReal *b, dReal
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline void dScaleVector3(dReal *res, dReal nScale)
+PURE_INLINE void dScaleVector3(dReal *res, dReal nScale)
 {
   res[0] *= nScale ;
   res[1] *= nScale ;
   res[2] *= nScale ;
 }
 
-inline void dNegateVector3(dReal *res)
+PURE_INLINE void dNegateVector3(dReal *res)
 {
   res[0] = -res[0];
   res[1] = -res[1];
   res[2] = -res[2];
 }
 
-inline void dCopyVector3(dReal *res, const dReal *a)
+PURE_INLINE void dCopyVector3(dReal *res, const dReal *a)
 {
   dReal res_0, res_1, res_2;
   res_0 = a[0];
@@ -98,7 +97,7 @@ inline void dCopyVector3(dReal *res, const dReal *a)
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline void dCopyScaledVector3(dReal *res, const dReal *a, dReal nScale)
+PURE_INLINE void dCopyScaledVector3(dReal *res, const dReal *a, dReal nScale)
 {
   dReal res_0, res_1, res_2;
   res_0 = a[0] * nScale;
@@ -108,7 +107,7 @@ inline void dCopyScaledVector3(dReal *res, const dReal *a, dReal nScale)
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline void dCopyNegatedVector3(dReal *res, const dReal *a)
+PURE_INLINE void dCopyNegatedVector3(dReal *res, const dReal *a)
 {
   dReal res_0, res_1, res_2;
   res_0 = -a[0];
@@ -118,7 +117,7 @@ inline void dCopyNegatedVector3(dReal *res, const dReal *a)
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline void dCopyVector4(dReal *res, const dReal *a)
+PURE_INLINE void dCopyVector4(dReal *res, const dReal *a)
 {
   dReal res_0, res_1, res_2, res_3;
   res_0 = a[0];
@@ -129,21 +128,21 @@ inline void dCopyVector4(dReal *res, const dReal *a)
   res[0] = res_0; res[1] = res_1; res[2] = res_2; res[3] = res_3;
 }
 
-inline void dCopyMatrix4x4(dReal *res, const dReal *a)
+PURE_INLINE void dCopyMatrix4x4(dReal *res, const dReal *a)
 {
   dCopyVector4(res + 0, a + 0);
   dCopyVector4(res + 4, a + 4);
   dCopyVector4(res + 8, a + 8);
 }
 
-inline void dCopyMatrix4x3(dReal *res, const dReal *a)
+PURE_INLINE void dCopyMatrix4x3(dReal *res, const dReal *a)
 {
   dCopyVector3(res + 0, a + 0);
   dCopyVector3(res + 4, a + 4);
   dCopyVector3(res + 8, a + 8);
 }
 
-inline void dGetMatrixColumn3(dReal *res, const dReal *a, unsigned n)
+PURE_INLINE void dGetMatrixColumn3(dReal *res, const dReal *a, unsigned n)
 {
   dReal res_0, res_1, res_2;
   res_0 = a[n + 0];
@@ -153,17 +152,17 @@ inline void dGetMatrixColumn3(dReal *res, const dReal *a, unsigned n)
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline dReal dCalcVectorLength3(const dReal *a)
+PURE_INLINE dReal dCalcVectorLength3(const dReal *a)
 {
   return dSqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
 }
 
-inline dReal dCalcVectorLengthSquare3(const dReal *a)
+PURE_INLINE dReal dCalcVectorLengthSquare3(const dReal *a)
 {
   return (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
 }
 
-inline dReal dCalcPointDepth3(const dReal *test_p, const dReal *plane_p, const dReal *plane_n)
+PURE_INLINE dReal dCalcPointDepth3(const dReal *test_p, const dReal *plane_p, const dReal *plane_n)
 {
   return (plane_p[0] - test_p[0]) * plane_n[0] + (plane_p[1] - test_p[1]) * plane_n[1] + (plane_p[2] - test_p[2]) * plane_n[2];
 }
@@ -174,19 +173,19 @@ inline dReal dCalcPointDepth3(const dReal *test_p, const dReal *plane_p, const d
 * step_a and step_b indexes apart respectively. dCalcVectorDot3() means dDot311.
 */
 
-inline dReal _dCalcVectorDot3(const dReal *a, const dReal *b, unsigned step_a, unsigned step_b)
+PURE_INLINE dReal _dCalcVectorDot3(const dReal *a, const dReal *b, unsigned step_a, unsigned step_b)
 {
   return a[0] * b[0] + a[step_a] * b[step_b] + a[2 * step_a] * b[2 * step_b];
 }
 
 
-inline dReal dCalcVectorDot3    (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,1,1); }
-inline dReal dCalcVectorDot3_13 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,1,3); }
-inline dReal dCalcVectorDot3_31 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,3,1); }
-inline dReal dCalcVectorDot3_33 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,3,3); }
-inline dReal dCalcVectorDot3_14 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,1,4); }
-inline dReal dCalcVectorDot3_41 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,4,1); }
-inline dReal dCalcVectorDot3_44 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,4,4); }
+PURE_INLINE dReal dCalcVectorDot3    (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,1,1); }
+PURE_INLINE dReal dCalcVectorDot3_13 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,1,3); }
+PURE_INLINE dReal dCalcVectorDot3_31 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,3,1); }
+PURE_INLINE dReal dCalcVectorDot3_33 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,3,3); }
+PURE_INLINE dReal dCalcVectorDot3_14 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,1,4); }
+PURE_INLINE dReal dCalcVectorDot3_41 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,4,1); }
+PURE_INLINE dReal dCalcVectorDot3_44 (const dReal *a, const dReal *b) { return _dCalcVectorDot3(a,b,4,4); }
 
 
 /*
@@ -195,7 +194,7 @@ inline dReal dCalcVectorDot3_44 (const dReal *a, const dReal *b) { return _dCalc
  * dCalcVectorCross3() means dCross3111.
  */
 
-inline void _dCalcVectorCross3(dReal *res, const dReal *a, const dReal *b, unsigned step_res, unsigned step_a, unsigned step_b)
+PURE_INLINE void _dCalcVectorCross3(dReal *res, const dReal *a, const dReal *b, unsigned step_res, unsigned step_a, unsigned step_b)
 {
   dReal res_0, res_1, res_2;
   res_0 = a[  step_a]*b[2*step_b] - a[2*step_a]*b[  step_b];
@@ -207,23 +206,23 @@ inline void _dCalcVectorCross3(dReal *res, const dReal *a, const dReal *b, unsig
   res[2*step_res] = res_2;
 }
 
-inline void dCalcVectorCross3    (dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 1, 1, 1); }
-inline void dCalcVectorCross3_114(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 1, 1, 4); }
-inline void dCalcVectorCross3_141(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 1, 4, 1); }
-inline void dCalcVectorCross3_144(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 1, 4, 4); }
-inline void dCalcVectorCross3_411(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 4, 1, 1); }
-inline void dCalcVectorCross3_414(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 4, 1, 4); }
-inline void dCalcVectorCross3_441(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 4, 4, 1); }
-inline void dCalcVectorCross3_444(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 4, 4, 4); }
+PURE_INLINE void dCalcVectorCross3    (dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 1, 1, 1); }
+PURE_INLINE void dCalcVectorCross3_114(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 1, 1, 4); }
+PURE_INLINE void dCalcVectorCross3_141(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 1, 4, 1); }
+PURE_INLINE void dCalcVectorCross3_144(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 1, 4, 4); }
+PURE_INLINE void dCalcVectorCross3_411(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 4, 1, 1); }
+PURE_INLINE void dCalcVectorCross3_414(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 4, 1, 4); }
+PURE_INLINE void dCalcVectorCross3_441(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 4, 4, 1); }
+PURE_INLINE void dCalcVectorCross3_444(dReal *res, const dReal *a, const dReal *b) { _dCalcVectorCross3(res, a, b, 4, 4, 4); }
 
-inline void dAddVectorCross3(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dAddVectorCross3(dReal *res, const dReal *a, const dReal *b)
 {
   dReal tmp[3];
   dCalcVectorCross3(tmp, a, b);
   dAddVectors3(res, res, tmp);
 }
 
-inline void dSubtractVectorCross3(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dSubtractVectorCross3(dReal *res, const dReal *a, const dReal *b)
 {
   dReal tmp[3];
   dCalcVectorCross3(tmp, a, b);
@@ -239,7 +238,7 @@ inline void dSubtractVectorCross3(dReal *res, const dReal *a, const dReal *b)
  * if (plus,minus) is (-,+) then a negative version will be written.
  */
 
-inline void dSetCrossMatrixPlus(dReal *res, const dReal *a, unsigned skip)
+PURE_INLINE void dSetCrossMatrixPlus(dReal *res, const dReal *a, unsigned skip)
 {
   const dReal a_0 = a[0], a_1 = a[1], a_2 = a[2];
   res[1] = -a_2;
@@ -250,7 +249,7 @@ inline void dSetCrossMatrixPlus(dReal *res, const dReal *a, unsigned skip)
   res[2*skip+1] = +a_0;
 }
 
-inline void dSetCrossMatrixMinus(dReal *res, const dReal *a, unsigned skip)
+PURE_INLINE void dSetCrossMatrixMinus(dReal *res, const dReal *a, unsigned skip)
 {
   const dReal a_0 = a[0], a_1 = a[1], a_2 = a[2];
   res[1] = +a_2;
@@ -266,7 +265,7 @@ inline void dSetCrossMatrixMinus(dReal *res, const dReal *a, unsigned skip)
  * compute the distance between two 3D-vectors
  */
 
-inline dReal dCalcPointsDistance3(const dReal *a, const dReal *b)
+PURE_INLINE dReal dCalcPointsDistance3(const dReal *a, const dReal *b)
 {
   dReal res;
   dReal tmp[3];
@@ -279,7 +278,7 @@ inline dReal dCalcPointsDistance3(const dReal *a, const dReal *b)
  * special case matrix multiplication, with operator selection
  */
 
-inline void dMultiplyHelper0_331(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyHelper0_331(dReal *res, const dReal *a, const dReal *b)
 {
   dReal res_0, res_1, res_2;
   res_0 = dCalcVectorDot3(a, b);
@@ -289,7 +288,7 @@ inline void dMultiplyHelper0_331(dReal *res, const dReal *a, const dReal *b)
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline void dMultiplyHelper1_331(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyHelper1_331(dReal *res, const dReal *a, const dReal *b)
 {
   dReal res_0, res_1, res_2;
   res_0 = dCalcVectorDot3_41(a, b);
@@ -299,12 +298,12 @@ inline void dMultiplyHelper1_331(dReal *res, const dReal *a, const dReal *b)
   res[0] = res_0; res[1] = res_1; res[2] = res_2;
 }
 
-inline void dMultiplyHelper0_133(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyHelper0_133(dReal *res, const dReal *a, const dReal *b)
 {
   dMultiplyHelper1_331(res, b, a);
 }
 
-inline void dMultiplyHelper1_133(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyHelper1_133(dReal *res, const dReal *a, const dReal *b)
 {
   dReal res_0, res_1, res_2;
   res_0 = dCalcVectorDot3_44(a, b);
@@ -319,64 +318,64 @@ Note: NEVER call any of these functions/macros with the same variable for A and 
 it is not equivalent to A*=B.
 */
 
-inline void dMultiply0_331(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiply0_331(dReal *res, const dReal *a, const dReal *b)
 {
   dMultiplyHelper0_331(res, a, b);
 }
 
-inline void dMultiply1_331(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiply1_331(dReal *res, const dReal *a, const dReal *b)
 {
   dMultiplyHelper1_331(res, a, b);
 }
 
-inline void dMultiply0_133(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiply0_133(dReal *res, const dReal *a, const dReal *b)
 {
   dMultiplyHelper0_133(res, a, b);
 }
 
-inline void dMultiply0_333(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiply0_333(dReal *res, const dReal *a, const dReal *b)
 {
   dMultiplyHelper0_133(res + 0, a + 0, b);
   dMultiplyHelper0_133(res + 4, a + 4, b);
   dMultiplyHelper0_133(res + 8, a + 8, b);
 }
 
-inline void dMultiply1_333(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiply1_333(dReal *res, const dReal *a, const dReal *b)
 {
   dMultiplyHelper1_133(res + 0, b, a + 0);
   dMultiplyHelper1_133(res + 4, b, a + 1);
   dMultiplyHelper1_133(res + 8, b, a + 2);
 }
 
-inline void dMultiply2_333(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiply2_333(dReal *res, const dReal *a, const dReal *b)
 {
   dMultiplyHelper0_331(res + 0, b, a + 0);
   dMultiplyHelper0_331(res + 4, b, a + 4);
   dMultiplyHelper0_331(res + 8, b, a + 8);
 }
 
-inline void dMultiplyAdd0_331(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyAdd0_331(dReal *res, const dReal *a, const dReal *b)
 {
   dReal tmp[3];
   dMultiplyHelper0_331(tmp, a, b);
   dAddVectors3(res, res, tmp);
 }
 
-inline void dMultiplyAdd1_331(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyAdd1_331(dReal *res, const dReal *a, const dReal *b)
 {
   dReal tmp[3];
   dMultiplyHelper1_331(tmp, a, b);
   dAddVectors3(res, res, tmp);
 }
 
-inline void dMultiplyAdd0_133(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyAdd0_133(dReal *res, const dReal *a, const dReal *b)
 {
   dReal tmp[3];
   dMultiplyHelper0_133(tmp, a, b);
   dAddVectors3(res, res, tmp);
 }
 
-inline void dMultiplyAdd0_333(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyAdd0_333(dReal *res, const dReal *a, const dReal *b)
 {
   dReal tmp[3];
   dMultiplyHelper0_133(tmp, a + 0, b);
@@ -387,7 +386,7 @@ inline void dMultiplyAdd0_333(dReal *res, const dReal *a, const dReal *b)
   dAddVectors3(res + 8, res + 8, tmp);
 }
 
-inline void dMultiplyAdd1_333(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyAdd1_333(dReal *res, const dReal *a, const dReal *b)
 {
   dReal tmp[3];
   dMultiplyHelper1_133(tmp, b, a + 0);
@@ -398,7 +397,7 @@ inline void dMultiplyAdd1_333(dReal *res, const dReal *a, const dReal *b)
   dAddVectors3(res + 8, res + 8, tmp);
 }
 
-inline void dMultiplyAdd2_333(dReal *res, const dReal *a, const dReal *b)
+PURE_INLINE void dMultiplyAdd2_333(dReal *res, const dReal *a, const dReal *b)
 {
   dReal tmp[3];
   dMultiplyHelper0_331(tmp, b, a + 0);
@@ -433,17 +432,17 @@ ODE_API void dNormalize4 (dVector4 a); // Potentially asserts on zero vec
 int  _dSafeNormalize3 (dVector3 a);
 int  _dSafeNormalize4 (dVector4 a);
 
-inline void _dNormalize3(dVector3 a)
+PURE_INLINE void _dNormalize3(dVector3 a)
 {
   int bNormalizationResult = _dSafeNormalize3(a);
-  assert(bNormalizationResult);
+  dIASSERT(bNormalizationResult);
   dVARIABLEUSED(bNormalizationResult);
 }
 
-inline void _dNormalize4(dVector4 a)
+PURE_INLINE void _dNormalize4(dVector4 a)
 {
   int bNormalizationResult = _dSafeNormalize4(a);
-  assert(bNormalizationResult);
+  dIASSERT(bNormalizationResult);
   dVARIABLEUSED(bNormalizationResult);
 }
 
