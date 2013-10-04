@@ -39,7 +39,7 @@
 
 #include "dynamics/Shape.h"
 #include "dynamics/BodyNode.h"
-#include "collision/dart/DARTCollide.h"
+#include "collision/dart/Collision.h"
 
 namespace dart {
 namespace collision {

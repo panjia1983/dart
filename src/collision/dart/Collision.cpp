@@ -35,7 +35,7 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "collision/dart/DARTCollide.h"
+#include "collision/dart/Collision.h"
 
 #include <memory>
 
