@@ -48,7 +48,7 @@
 #include "yui/GLFuncs.h"
 
 namespace dart {
-namespace simulation {
+namespace yui {
 
 SimWindow::SimWindow()
     : Win3D()
@@ -104,7 +104,7 @@ void SimWindow::draw()
                 int start = mWorld->getIndex(i);
                 //int size = mWorld->getDofs(i).size();
                 int size = mWorld->getSkeleton(i)->getNumGenCoords();
-                mWorld->getSkeleton(i)->setConfig(mBakedStates[mPlayFrame].segment(start, size), true, false);
+                mWorld->getSkeleton(i)->setConfig(mBakedStates[mPlayFrame].segment(start, size));
             }
             if (mShowMarkers) {
                 int sumDofs = mWorld->getIndex(nSkels);

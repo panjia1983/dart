@@ -86,6 +86,11 @@ public:
 
     /// @brief Set whether this skeleton will be updated by forward dynamics.
     /// @param[in] _isMobile True if this skeleton is mobile.
+    /// @warning This function should be called before this skeleton is added to
+    ///          the world. If not, the constraint dynamics algorithm will not
+    ///          work. If the user want to change the immobile state after this
+    ///          skeleton is added to the world, the user should remove this
+    ///          skeleton from the world and add it to the world again.
     void setMobile(bool _isMobile);
 
     /// @brief Get whether this skeleton will be updated by forward dynamics.
@@ -129,18 +134,23 @@ public:
     // Properties updated by dynamics
     //--------------------------------------------------------------------------
     /// @brief
-    void setConfig(const std::vector<int>& _id, Eigen::VectorXd _vals,
-                   bool _calcTrans = true, bool _calcDeriv = true);
+    void setConfig(const std::vector<int>& _genCoords, const Eigen::VectorXd& _config);
 
     /// @brief
-    void setConfig(const Eigen::VectorXd& _pose,
-                   bool bCalcTrans = true, bool bCalcDeriv = true);
+    void setConfig(const Eigen::VectorXd& _config);
 
     /// @brief Get the configuration of this skeleton described in generalized
-    /// coordinates. The returned order of configuration is determined by _id.
-    /// If you just want the configuration in original order then use
-    /// GenCoordSystem::get_q().
+    /// coordinates. The returned order of configuration is determined by _genCoords.
     Eigen::VectorXd getConfig(const std::vector<int>& _id) const;
+
+    /// @brief
+    Eigen::VectorXd getConfig() const;
+
+    /// @brief
+    void setState(const Eigen::VectorXd& _state);
+
+    /// @brief
+    Eigen::VectorXd getState();
 
     /// @brief
     Eigen::MatrixXd getMassMatrix() const;
@@ -194,13 +204,6 @@ public:
     void setConstraintForces(const Eigen::VectorXd& _Fc);
 
     /// @brief
-    double getKineticEnergy() const;
-
-    // TODO: Not implemented.
-    /// @brief
-    double getPotentialEnergy() const;
-
-    /// @brief
     Eigen::Vector3d getWorldCOM();
 
     //--------------------------------------------------------------------------
@@ -209,32 +212,12 @@ public:
     /// @brief
     void init();
 
-    /// @brief Update joint and body kinematics.
-    void updateForwardKinematics(bool _firstDerivative = true,
-                                 bool _secondDerivative = true);
-
     /// @brief (q, dq, ddq) --> (tau)
     void computeInverseDynamicsLinear(const Eigen::Vector3d& _gravity,
                                 bool _computeJacobian = true,
                                 bool _computeJacobianDeriv = true,
                                 bool _withExternalForces = false,
                                 bool _withDampingForces = false);
-
-    /// @brief Inverse dynamics computation.
-    /// Runs recursive inverse dynamics algorithm and returns the generalized
-    /// forces; if qdd is NULL, it is treated as zero; also computes Jacobian Jv
-    /// and Jw in iterative manner if the flag is true i.e. replaces
-    /// updateFirstDerivatives of non-recursive dynamics; when
-    ///_withExternalForces is true, external forces will be accounted for in the
-    /// returned generalized forces; when _withExternalForces is false, only the
-    /// sum of Corolis force and gravity is returned.
-    Eigen::VectorXd computeInverseDynamicsLinear(
-            const Eigen::Vector3d& _gravity,
-            const Eigen::VectorXd* _qdot,
-            const Eigen::VectorXd* _qdotdot = NULL,
-            bool _computeJacobians = true,
-            bool _withExternalForces = false,
-            bool _withDampingForces = false);
 
     /// @brief Evaluate external forces to generalized torques.
     /// Similarly to the inverse dynamics computation, when _useRecursive is

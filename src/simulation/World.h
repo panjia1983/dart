@@ -94,12 +94,6 @@ public:
     //--------------------------------------------------------------------------
     // Simulation
     //--------------------------------------------------------------------------
-    /// @breif Reset the world.
-    ///
-    /// Set Dofs and DofVels as zero (or initial value) and update all
-    /// transformations and velocities of each links.
-    void reset();
-
     /// @brief Calculate the dynamics and integrate the world for one step.
     void step();
 
@@ -150,6 +144,8 @@ public:
     /// @brief .
     /// @param[in] _skel
     void addSkeleton(dynamics::Skeleton* _skeleton);
+
+    void removeSkeleton(dynamics::Skeleton* _skeleton);
 
     /// @brief Get the dof index for the indexed skeleton.
     /// @param[in] _index
