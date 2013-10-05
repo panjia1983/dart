@@ -1,7 +1,10 @@
-/* Copyright (c) 2011, Georgia Tech Research Corporation
+/*
+ * Copyright (c) 2011, Georgia Tech Research Corporation
  * All rights reserved.
  *
- * Author(s): Karen Liu <karenliu@cc.gatech.edu>
+ * Author(s): Jeongseok Lee <jslee02@gmail.com>
+ * Date: 09/13/2013
+ *
  * Geoorgia Tech Graphics Lab and Humanoid Robotics Lab
  *
  * Directed by Prof. C. Karen Liu and Prof. Mike Stilman
@@ -17,12 +20,6 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * This code incorporates portions of Open Dynamics Engine
- *     (Copyright (c) 2001-2004, Russell L. Smith. All rights
- *     reserved.) and portions of FCL (Copyright (c) 2011, Willow
- *     Garage, Inc. All rights reserved.), which were released under
- *     the same BSD license as below
- *
  *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
  *   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -38,73 +35,39 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DART_SIMULATION_SIMWINDOW_H
-#define DART_SIMULATION_SIMWINDOW_H
+#ifndef DART_COLLISION_DART_CONLLISION_DETECTOR_H
+#define DART_COLLISION_DART_CONLLISION_DETECTOR_H
 
-#include "yui/Win3D.h"
-#include "simulation/World.h"
+#include "collision/CollisionDetector.h"
 
 namespace dart {
-namespace simulation {
-
-class World;
+namespace collision {
 
 /// @brief
-class SimWindow : public yui::Win3D
+class DARTCollisionDetector : public CollisionDetector
 {
 public:
-    /// @brief
-    SimWindow();
+    /// @brief Default constructor
+    DARTCollisionDetector();
 
-    /// @brief
-    virtual ~SimWindow();
+    /// @brief Default destructor
+    virtual ~DARTCollisionDetector();
 
-    /// @brief
-    virtual void timeStepping() { mWorld->step(); }
+    // Documentation inherited
+    virtual CollisionNode* createCollisionNode(dynamics::BodyNode* _bodyNode);
 
-    /// @brief
-    virtual void drawSkels();
-
-    /// @brief
-    virtual void displayTimer(int _val);
-
-    /// @brief
-    virtual void draw();
-
-    /// @brief
-    virtual void keyboard(unsigned char key, int x, int y);
-
-    /// @brief
-    void setWorld(simulation::World *_world) { mWorld = _world; }
-
-    //            inline bool isSimulating() const { return mSimulating; }
-
-    //            inline void setSimulatingFlag(int _flag) { mSimulating = _flag; }
+    // Documentation inherited
+    virtual bool detectCollision(bool _checkAllCollisions,
+                                bool _calculateContactPoints);
 
 protected:
-    /// @brief
-    World* mWorld;
-
-    /// @brief
-    int mPlayFrame;
-
-    /// @brief
-    bool mPlay;
-
-    /// @brief
-    bool mSimulating;
-
-    /// @brief
-    bool mShowMarkers;
-
-    /// @brief
-    std::vector<Eigen::VectorXd> mBakedStates;
-
-    /// @brief
-    void bake();
+    // Documentation inherited
+    virtual bool detectCollision(CollisionNode* _collNode1,
+                                CollisionNode* _collNode2,
+                                bool _calculateContactPoints);
 };
 
-} // namespace simulation
+} // namespace collision
 } // namespace dart
 
-#endif // #ifndef DART_SIMULATION_SIMWINDOW_H
+#endif // #ifndef DART_COLLISION_FCL_CONLLISION_DETECTOR_H

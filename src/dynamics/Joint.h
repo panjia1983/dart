@@ -52,13 +52,14 @@ class BodyNode;
 class Joint : public GenCoordSystem
 {
 public:
+    friend class BodyNode;
+
     //--------------------------------------------------------------------------
     // Types
     //--------------------------------------------------------------------------
     /// @brief
     enum JointType
     {
-        UNKNOWN,
         WELD,          // 0-dof
         REVOLUTE,      // 1-dof
         PRISMATIC,     // 1-dof
@@ -75,7 +76,7 @@ public:
     // Constructor and Destructor
     //--------------------------------------------------------------------------
     /// @brief
-    Joint(const std::string& _name = "");
+    Joint(JointType type, const std::string& _name = "");
 
     /// @brief
     virtual ~Joint();
@@ -102,16 +103,12 @@ public:
     const math::Jacobian& getLocalJacobian() const;
 
     /// @brief
-    const Eigen::Vector6d& getLocalVelocity() const;
+    const math::Jacobian& getLocalJacobianTimeDeriv() const;
 
-    /// @brief
-    const math::Jacobian& getLocalJacobianFirstDerivative() const;
-
-    /// @brief
-    const Eigen::Vector6d& getLocalAcceleration() const;
-
-    /// @brief true if d is present in the dof list for the joint.
-    bool isPresent(const GenCoord* _q) const;
+    /// @brief Get whether this joint contains _genCoord.
+    /// @param[in] Generalized coordinate to see.
+    /// @return True if this joint contains _genCoord.
+    bool contains(const GenCoord* _genCoord) const;
 
     /// @brief Get local index of the dof at this joint; if the dof is not
     /// presented at this joint, return -1.
@@ -121,7 +118,7 @@ public:
     // Dynamics Properties
     //--------------------------------------------------------------------------
     /// @brief
-    void setPositionLimited(bool _positionLimit);
+    void setPositionLimited(bool _isPositionLimited);
 
     /// @brief
     bool isPositionLimited() const;
@@ -129,9 +126,6 @@ public:
     //--------------------------------------------------------------------------
     // Structueral Properties
     //--------------------------------------------------------------------------
-    /// @brief
-    void setSkeletonIndex(int _idx);
-
     /// @brief
     int getSkeletonIndex() const;
 
@@ -147,27 +141,9 @@ public:
     /// @brief
     const Eigen::Isometry3d& getTransformFromChildBodyNode() const;
 
-    // TODO: Not implemented.
-    /// @brief
-    virtual double getPotentialEnergy() const = 0;
-
     //--------------------------------------------------------------------------
     // Recursive Kinematics Algorithms
     //--------------------------------------------------------------------------
-    /// @brief
-    /// q --> T(q)
-    virtual void updateTransform() = 0;
-
-    /// @brief
-    /// q, dq --> S(q), V(q, dq)
-    /// V(q, dq) = S(q) * dq
-    virtual void updateVelocity() = 0;
-
-    /// @brief
-    /// dq, ddq, S(q) --> dS(q), dV(q, dq, ddq)
-    /// dV(q, dq, ddq) = dS(q) * dq + S(q) * ddq
-    virtual void updateAcceleration() = 0;
-
     /// @brief
     void setDampingCoefficient(int _idx, double _d);
 
@@ -183,6 +159,20 @@ public:
     void applyGLTransform(renderer::RenderInterface* _ri);
 
 protected:
+    /// @brief
+    /// q --> T(q)
+    virtual void updateTransform() = 0;
+
+    /// @brief
+    /// q, dq --> S(q), V(q, dq)
+    /// V(q, dq) = S(q) * dq
+    virtual void updateJacobian() = 0;
+
+    /// @brief
+    /// dq, ddq, S(q) --> dS(q), dV(q, dq, ddq)
+    /// dV(q, dq, ddq) = dS(q) * dq + S(q) * ddq
+    virtual void updateJacobianTimeDeriv() = 0;
+
     //--------------------------------------------------------------------------
     //
     //--------------------------------------------------------------------------
@@ -194,9 +184,6 @@ protected:
     //--------------------------------------------------------------------------
     /// @brief Unique dof id in skeleton
     int mSkelIndex;
-
-    /// @brief Type of joint e.g. ball, hinge etc.
-    JointType mJointType;
 
     /// @brief
     Eigen::Isometry3d mT_ParentBodyToJoint;
@@ -210,14 +197,8 @@ protected:
     /// @brief Local transformation.
     Eigen::Isometry3d mT;
 
-    /// @brief Local generalized body velocity.
-    Eigen::Vector6d mV;
-
     /// @brief Local Jacobian.
     math::Jacobian mS;
-
-    /// @brief Local generalized body acceleration.
-    Eigen::Vector6d mdV;
 
     /// @brief Time derivative of local Jacobian.
     math::Jacobian mdS;
@@ -233,6 +214,10 @@ protected:
 
     /// @brief
     std::vector<double> mSpringStiffness;
+
+private:
+    /// @brief Type of joint e.g. ball, hinge etc.
+    JointType mJointType;
 };
 
 } // namespace dynamics

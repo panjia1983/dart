@@ -51,6 +51,8 @@
 #include "dynamics/WeldJoint.h"
 #include "dynamics/EulerJoint.h"
 #include "dynamics/ScrewJoint.h"
+#include "dynamics/BodyNode.h"
+#include "dynamics/Skeleton.h"
 #include "simulation/World.h"
 #include "utils/Paths.h"
 #include "utils/SkelParser.h"
@@ -71,6 +73,13 @@ public:
 /******************************************************************************/
 void JOINTS::kinematicsTest(Joint* _joint)
 {
+    BodyNode bodyNode;
+    bodyNode.setParentJoint(_joint);
+
+    Skeleton skeleton;
+    skeleton.addBodyNode(&bodyNode);
+    skeleton.init();
+
     int dof = _joint->getNumGenCoords();
 
     //--------------------------------------------------------------------------
@@ -95,39 +104,22 @@ void JOINTS::kinematicsTest(Joint* _joint)
         _joint->set_dq(dq);
         _joint->set_ddq(ddq);
 
-        _joint->updateTransform();
-        _joint->updateVelocity();
-        _joint->updateAcceleration();
+        bodyNode.updateTransform();
+        bodyNode.updateVelocity();
+        bodyNode.updateEta();
+        bodyNode.updateAcceleration();
 
         if (_joint->getNumGenCoords() == 0)
             return;
 
         Eigen::Isometry3d T = _joint->getLocalTransform();
-        Eigen::Vector6d V = _joint->getLocalVelocity();
         Jacobian J = _joint->getLocalJacobian();
-        Eigen::Vector6d dV = _joint->getLocalAcceleration();
-        Jacobian dJ = _joint->getLocalJacobianFirstDerivative();
+        Jacobian dJ = _joint->getLocalJacobianTimeDeriv();
 
         //--------------------------------------------------------------------------
         // Test T
         //--------------------------------------------------------------------------
         EXPECT_TRUE(math::verifyTransform(T));
-
-        //--------------------------------------------------------------------------
-        // Test V == J * dq
-        //--------------------------------------------------------------------------
-        Eigen::Vector6d Jdq = J * _joint->get_dq();
-        for (int i = 0; i < 6; ++i)
-            EXPECT_NEAR(V(i), Jdq(i), JOINT_TOL);
-
-        //--------------------------------------------------------------------------
-        // Test dV == dJ * dq + J * ddq
-        //--------------------------------------------------------------------------
-        Eigen::Vector6d dJdq = dJ * _joint->get_dq();
-        Eigen::Vector6d Jddq = J * _joint->get_ddq();
-        Eigen::Vector6d dJdq_Jddq = dJdq + Jddq;
-        for (int i = 0; i < 6; ++i)
-            EXPECT_NEAR(dV(i), dJdq_Jddq(i), JOINT_TOL);
 
         //--------------------------------------------------------------------------
         // Test analytic Jacobian and numerical Jacobian
@@ -139,14 +131,14 @@ void JOINTS::kinematicsTest(Joint* _joint)
             // a
             Eigen::VectorXd q_a = q;
             _joint->set_q(q_a);
-            _joint->updateTransform();
+            bodyNode.updateTransform();
             Eigen::Isometry3d T_a = _joint->getLocalTransform();
 
             // b
             Eigen::VectorXd q_b = q;
             q_b(i) += dt;
             _joint->set_q(q_b);
-            _joint->updateTransform();
+            bodyNode.updateTransform();
             Eigen::Isometry3d T_b = _joint->getLocalTransform();
 
             //
@@ -186,14 +178,14 @@ void JOINTS::kinematicsTest(Joint* _joint)
             // a
             Eigen::VectorXd q_a = q;
             _joint->set_q(q_a);
-            _joint->updateVelocity();
+            bodyNode.updateVelocity();
             Jacobian J_a = _joint->getLocalJacobian();
 
             // b
             Eigen::VectorXd q_b = q;
             q_b(i) += dt;
             _joint->set_q(q_b);
-            _joint->updateVelocity();
+            bodyNode.updateVelocity();
             Jacobian J_b = _joint->getLocalJacobian();
 
             //
@@ -212,76 +204,79 @@ void JOINTS::kinematicsTest(Joint* _joint)
 // 0-dof joint
 TEST_F(JOINTS, WELD_JOINT)
 {
-    WeldJoint weldJoint;
+    WeldJoint* weldJoint = new WeldJoint;
 
-    kinematicsTest(&weldJoint);
+    kinematicsTest(weldJoint);
 }
 
 // 1-dof joint
 TEST_F(JOINTS, REVOLUTE_JOINT)
 {
-    RevoluteJoint revJoint;
+    RevoluteJoint* revJoint = new RevoluteJoint;
 
-    kinematicsTest(&revJoint);
+    kinematicsTest(revJoint);
 }
 
 // 1-dof joint
 TEST_F(JOINTS, PRISMATIC_JOINT)
 {
-    PrismaticJoint priJoint;
+    PrismaticJoint* priJoint = new PrismaticJoint;
 
-    kinematicsTest(&priJoint);
+    kinematicsTest(priJoint);
 }
 
 // 1-dof joint
 TEST_F(JOINTS, SCREW_JOINT)
 {
-    ScrewJoint screwJoint;
+    ScrewJoint* screwJoint = new ScrewJoint;
 
-    kinematicsTest(&screwJoint);
+    kinematicsTest(screwJoint);
 }
 
 // 2-dof joint
 TEST_F(JOINTS, UNIVERSAL_JOINT)
 {
-    UniversalJoint univJoint;
+    UniversalJoint* univJoint = new UniversalJoint;
 
-    kinematicsTest(&univJoint);
+    kinematicsTest(univJoint);
 }
 
 // 3-dof joint
 TEST_F(JOINTS, BALL_JOINT)
 {
-    BallJoint ballJoint;
+    BallJoint* ballJoint = new BallJoint;
 
-    kinematicsTest(&ballJoint);
+    kinematicsTest(ballJoint);
 }
 
 // 3-dof joint
 TEST_F(JOINTS, EULER_JOINT)
 {
-    EulerJoint eulerJoint;
-    eulerJoint.setAxisOrder(EulerJoint::AO_XYZ);
-    kinematicsTest(&eulerJoint);
+    EulerJoint* eulerJoint1 = new EulerJoint;
 
-    eulerJoint.setAxisOrder(EulerJoint::AO_ZYX);
-    kinematicsTest(&eulerJoint);
+    eulerJoint1->setAxisOrder(EulerJoint::AO_XYZ);
+    kinematicsTest(eulerJoint1);
+
+    EulerJoint* eulerJoint2 = new EulerJoint;
+
+    eulerJoint2->setAxisOrder(EulerJoint::AO_ZYX);
+    kinematicsTest(eulerJoint2);
 }
 
 // 3-dof joint
 TEST_F(JOINTS, TRANSLATIONAL_JOINT)
 {
-    TranslationalJoint translationalJoint;
+    TranslationalJoint* translationalJoint = new TranslationalJoint;
 
-    kinematicsTest(&translationalJoint);
+    kinematicsTest(translationalJoint);
 }
 
 // 6-dof joint
 TEST_F(JOINTS, FREE_JOINT)
 {
-    FreeJoint freeJoint;
+    FreeJoint* freeJoint = new FreeJoint;
 
-    kinematicsTest(&freeJoint);
+    kinematicsTest(freeJoint);
 }
 
 TEST_F(JOINTS, POSITION_LIMIT)

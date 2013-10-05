@@ -45,11 +45,9 @@ namespace dart {
 namespace dynamics {
 
 EulerJoint::EulerJoint(const std::string& _name)
-    : Joint("EulerXYZ joint"),
+    : Joint(EULER, "EulerXYZ joint"),
       mAxisOrder(AO_XYZ)
 {
-    mJointType = EULER;
-
     mGenCoords.push_back(&mCoordinate[0]);
     mGenCoords.push_back(&mCoordinate[1]);
     mGenCoords.push_back(&mCoordinate[2]);
@@ -102,9 +100,8 @@ inline void EulerJoint::updateTransform()
     assert(math::verifyTransform(mT));
 }
 
-inline void EulerJoint::updateVelocity()
+inline void EulerJoint::updateJacobian()
 {
-    // S
     double q0 = mCoordinate[0].get_q();
     double q1 = mCoordinate[1].get_q();
     double q2 = mCoordinate[2].get_q();
@@ -164,14 +161,10 @@ inline void EulerJoint::updateVelocity()
     mS.col(0) = math::AdT(mT_ChildBodyToJoint, J0);
     mS.col(1) = math::AdT(mT_ChildBodyToJoint, J1);
     mS.col(2) = math::AdT(mT_ChildBodyToJoint, J2);
-
-    // V = S * dq
-    mV = mS * get_dq();
 }
 
-inline void EulerJoint::updateAcceleration()
+inline void EulerJoint::updateJacobianTimeDeriv()
 {
-    // dS
     double q0 = mCoordinate[0].get_q();
     double q1 = mCoordinate[1].get_q();
     double q2 = mCoordinate[2].get_q();
@@ -235,9 +228,6 @@ inline void EulerJoint::updateAcceleration()
     mdS.col(0) = math::AdT(mT_ChildBodyToJoint, dJ0);
     mdS.col(1) = math::AdT(mT_ChildBodyToJoint, dJ1);
     mdS.col(2) = math::AdT(mT_ChildBodyToJoint, dJ2);
-
-    // dV = dS * dq + S * ddq
-    mdV = mdS * get_dq() + mS * get_ddq();
 }
 
 } // namespace dynamics

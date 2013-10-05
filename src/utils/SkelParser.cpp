@@ -35,12 +35,9 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 // Standard Library
 #include <iostream>
 #include <algorithm>
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
 #include <Eigen/Dense>
 
 // Local Files
@@ -173,19 +170,19 @@ dynamics::Skeleton* SkelParser::readSkeleton(
 
     //--------------------------------------------------------------------------
     // immobile attribute
-    tinyxml2::XMLElement* immobileElement = NULL;
-    immobileElement = _skeletonElement->FirstChildElement("immobile");
-    if (immobileElement != NULL)
+    tinyxml2::XMLElement* mobileElement = NULL;
+    mobileElement = _skeletonElement->FirstChildElement("mobile");
+    if (mobileElement != NULL)
     {
-        std::string stdImmobile = immobileElement->GetText();
-        bool immobile = toBool(stdImmobile);
-        newSkeleton->setImmobileState(immobile);
+        std::string stdMobile = mobileElement->GetText();
+        bool mobile = toBool(stdMobile);
+        newSkeleton->setMobile(mobile);
     }
 
     //--------------------------------------------------------------------------
     // Bodies
     ElementEnumerator bodies(_skeletonElement, "body");
-    std::vector<SkelBodyNode> skelBodyNodes;
+    std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> > skelBodyNodes;
     while (bodies.next())
     {
         SkelBodyNode newSkelBodyNode
@@ -222,7 +219,7 @@ dynamics::Skeleton* SkelParser::readSkeleton(
         }
     }
 
-    for (std::vector<SkelBodyNode>::iterator it = skelBodyNodes.begin();
+    for (std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >::iterator it = skelBodyNodes.begin();
          it != skelBodyNodes.end(); ++it)
         newSkeleton->addBodyNode((*it).bodyNode);
 
@@ -404,7 +401,7 @@ dynamics::Shape* SkelParser::readShape(tinyxml2::XMLElement* vizElement)
 }
 
 dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
-                           const std::vector<SkelBodyNode>& _skelBodyNodes)
+                           const std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >& _skelBodyNodes)
 {
     assert(_jointElement != NULL);
 
@@ -449,7 +446,7 @@ dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
 
         if (strParent != std::string("world"))
         {
-            for (std::vector<SkelBodyNode>::const_iterator it =
+            for (std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >::const_iterator it =
                  _skelBodyNodes.begin(); it != _skelBodyNodes.end(); ++it)
                 if ((*it).bodyNode->getName() == strParent)
                 {
@@ -484,7 +481,7 @@ dynamics::Joint* SkelParser::readJoint(tinyxml2::XMLElement* _jointElement,
     {
         std::string strChild = getValueString(_jointElement, "child");
 
-        for (std::vector<SkelBodyNode>::const_iterator it =
+        for (std::vector<SkelBodyNode, Eigen::aligned_allocator<SkelBodyNode> >::const_iterator it =
              _skelBodyNodes.begin(); it != _skelBodyNodes.end(); ++it)
         {
             if ((*it).bodyNode->getName() == strChild)

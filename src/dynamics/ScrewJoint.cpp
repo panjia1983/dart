@@ -45,12 +45,10 @@ namespace dynamics {
 ScrewJoint::ScrewJoint(const Eigen::Vector3d& axis,
                        double _pitch,
                        const std::string& _name)
-    : Joint(_name),
+    : Joint(SCREW, _name),
       mAxis(axis.normalized()),
       mPitch(_pitch)
 {
-    mJointType = SCREW;
-
     mGenCoords.push_back(&mCoordinate);
 
     mS = Eigen::Matrix<double,6,1>::Zero();
@@ -65,8 +63,7 @@ ScrewJoint::~ScrewJoint()
 
 void ScrewJoint::setAxis(const Eigen::Vector3d& _axis)
 {
-    assert(_axis.norm() == 1);
-    mAxis = _axis;
+    mAxis = _axis.normalized();
 }
 
 const Eigen::Vector3d&ScrewJoint::getAxis() const
@@ -86,7 +83,6 @@ double ScrewJoint::getPitch() const
 
 void ScrewJoint::updateTransform()
 {
-    // T
     Eigen::Vector6d S = Eigen::Vector6d::Zero();
     S.head<3>() = mAxis;
     S.tail<3>() = mAxis*mPitch/DART_2PI;
@@ -97,25 +93,17 @@ void ScrewJoint::updateTransform()
     assert(math::verifyTransform(mT));
 }
 
-void ScrewJoint::updateVelocity()
+void ScrewJoint::updateJacobian()
 {
-    // S
     Eigen::Vector6d S = Eigen::Vector6d::Zero();
     S.head<3>() = mAxis;
     S.tail<3>() = mAxis*mPitch/DART_2PI;
     mS = math::AdT(mT_ChildBodyToJoint, S);
-
-    // V = S * dq
-    mV = mS * get_dq();
 }
 
-void ScrewJoint::updateAcceleration()
+void ScrewJoint::updateJacobianTimeDeriv()
 {
-    // dS = 0
-    mdS.setZero();
-
-    // dV = dS * dq + S * ddq
-    mdV = mS * get_ddq();
+    //mdS.setZero();
 }
 
 } // namespace dynamics

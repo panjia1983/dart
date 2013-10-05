@@ -57,72 +57,147 @@ TEST(BUILDING, BASIC)
 	//
 	//--------------------------------------------------------------------------
 	// Bodies
-    BodyNode body1;
-    BodyNode body2;
-    BodyNode body3;
+    BodyNode* body1 = new BodyNode;
+    BodyNode* body2 = new BodyNode;
+    BodyNode* body3 = new BodyNode;
 
 	// Joints
-	RevoluteJoint joint1;
-	RevoluteJoint joint2;
-	RevoluteJoint joint3;
+    RevoluteJoint* joint1 = new RevoluteJoint;
+    RevoluteJoint* joint2 = new RevoluteJoint;
+    RevoluteJoint* joint3 = new RevoluteJoint;
 
 	// Skeletons
-    Skeleton skel1;
+    Skeleton* skel1 = new Skeleton;
 
 	// World
-	World world;
+    World* world = new World;
 
 	//--------------------------------------------------------------------------
 	//
 	//--------------------------------------------------------------------------
 	// Bodies
-    body1.addChildBodyNode(&body2);
-    body2.addChildBodyNode(&body3);
+    body1->addChildBodyNode(body2);
+    body2->addChildBodyNode(body3);
 
-    body1.setParentJoint(&joint1);
-    body2.setParentJoint(&joint2);
-    body3.setParentJoint(&joint3);
+    body1->setParentJoint(joint1);
+    body2->setParentJoint(joint2);
+    body3->setParentJoint(joint3);
 
 	// Joints
-    joint1.setTransformFromParentBodyNode(Eigen::Isometry3d::Identity());
-    joint1.setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());
-    joint1.setAxis(Eigen::Vector3d(1.0, 0.0, 0.0));
+    joint1->setTransformFromParentBodyNode(Eigen::Isometry3d::Identity());
+    joint1->setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());
+    joint1->setAxis(Eigen::Vector3d(1.0, 0.0, 0.0));
 
-    joint2.setTransformFromParentBodyNode(Eigen::Isometry3d::Identity());
-    joint2.setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());
-    joint2.setAxis(Eigen::Vector3d(1.0, 0.0, 0.0));
+    joint2->setTransformFromParentBodyNode(Eigen::Isometry3d::Identity());
+    joint2->setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());
+    joint2->setAxis(Eigen::Vector3d(1.0, 0.0, 0.0));
 
-    joint3.setTransformFromParentBodyNode(Eigen::Isometry3d::Identity());
-    joint3.setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());
-    joint3.setAxis(Eigen::Vector3d(1.0, 0.0, 0.0));
+    joint3->setTransformFromParentBodyNode(Eigen::Isometry3d::Identity());
+    joint3->setTransformFromChildBodyNode(Eigen::Isometry3d::Identity());
+    joint3->setAxis(Eigen::Vector3d(1.0, 0.0, 0.0));
 
 	// Skeleton
-    skel1.addBodyNode(&body1);
-    skel1.addBodyNode(&body2);
-    skel1.addBodyNode(&body3);
+    skel1->addBodyNode(body1);
+    skel1->addBodyNode(body2);
+    skel1->addBodyNode(body3);
 
 	// World
-	world.addSkeleton(&skel1);
+    world->addSkeleton(skel1);
 
 	//--------------------------------------------------------------------------
 	//
 	//--------------------------------------------------------------------------
-	EXPECT_TRUE(body1.getParentBodyNode() == NULL);
-    EXPECT_TRUE(body1.getNumChildBodyNodes() == 1);
-	EXPECT_TRUE(body1.getChildBodyNode(0) == &body2);
+    EXPECT_TRUE(body1->getParentBodyNode() == NULL);
+    EXPECT_TRUE(body1->getNumChildBodyNodes() == 1);
+    EXPECT_TRUE(body1->getChildBodyNode(0) == body2);
 
-    EXPECT_TRUE(body2.getParentBodyNode() == &body1);
-    EXPECT_TRUE(body2.getNumChildBodyNodes() == 1);
-    EXPECT_TRUE(body2.getChildBodyNode(0) == &body3);
+    EXPECT_TRUE(body2->getParentBodyNode() == body1);
+    EXPECT_TRUE(body2->getNumChildBodyNodes() == 1);
+    EXPECT_TRUE(body2->getChildBodyNode(0) == body3);
 
-    EXPECT_TRUE(body3.getParentBodyNode() == &body2);
-    EXPECT_TRUE(body3.getNumChildBodyNodes() == 0);
+    EXPECT_TRUE(body3->getParentBodyNode() == body2);
+    EXPECT_TRUE(body3->getNumChildBodyNodes() == 0);
     //EXPECT_TRUE(body3.getChildBodyNode(0) == NULL);
 
-    EXPECT_TRUE(skel1.getNumBodyNodes() == 3);
-	EXPECT_TRUE(skel1.getNumGenCoords() == 3);
+    EXPECT_TRUE(skel1->getNumBodyNodes() == 3);
+    EXPECT_TRUE(skel1->getNumGenCoords() == 3);
 
-	EXPECT_TRUE(world.getNumSkeletons() == 1);
+    EXPECT_TRUE(world->getNumSkeletons() == 1);
+
+    int nSteps = 20;
+    for (int i = 0; i < nSteps; ++i)
+        world->step();
+
+    delete world;
+}
+
+/******************************************************************************/
+TEST(BUILDING, ADDING_AND_REMOVING_SKELETONS)
+{
+    // World
+    World* world = new World;
+
+    Skeleton* skeleton1 = createThreeLinkRobot(Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_X,
+                                               Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_Y,
+                                               Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_Z);
+
+    Skeleton* skeleton2 = createThreeLinkRobot(Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_X,
+                                               Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_Y,
+                                               Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_Z);
+
+    Skeleton* skeleton3 = createThreeLinkRobot(Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_X,
+                                               Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_Y,
+                                               Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_Z);
+
+    Skeleton* skeleton4 = createThreeLinkRobot(Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_X,
+                                               Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_Y,
+                                               Eigen::Vector3d(1.0, 1.0, 1.0),
+                                               DOF_Z);
+
+    int nSteps = 20;
+
+    // Empty world
+    for (int i = 0; i < nSteps; ++i)
+        world->step();
+
+    // Add skeleton1, skeleton2
+    world->addSkeleton(skeleton1);
+    world->addSkeleton(skeleton2);
+    EXPECT_TRUE(world->getNumSkeletons() == 2);
+    for (int i = 0; i < nSteps; ++i)
+        world->step();
+
+    // Remove skeleton2
+    world->removeSkeleton(skeleton2);
+    EXPECT_TRUE(world->getNumSkeletons() == 1);
+    for (int i = 0; i < nSteps; ++i)
+        world->step();
+
+    // Add skeleton3, skeleton4
+    world->addSkeleton(skeleton3);
+    world->addSkeleton(skeleton4);
+    EXPECT_TRUE(world->getNumSkeletons() == 3);
+    for (int i = 0; i < nSteps; ++i)
+        world->step();
+
+    // Remove skeleton1
+    world->removeSkeleton(skeleton1);
+    EXPECT_TRUE(world->getNumSkeletons() == 2);
+    for (int i = 0; i < nSteps; ++i)
+        world->step();
+
+    delete world;
 }
 
 /******************************************************************************/

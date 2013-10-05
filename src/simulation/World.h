@@ -94,12 +94,6 @@ public:
     //--------------------------------------------------------------------------
     // Simulation
     //--------------------------------------------------------------------------
-    /// @breif Reset the world.
-    ///
-    /// Set Dofs and DofVels as zero (or initial value) and update all
-    /// transformations and velocities of each links.
-    void reset();
-
     /// @brief Calculate the dynamics and integrate the world for one step.
     void step();
 
@@ -151,6 +145,8 @@ public:
     /// @param[in] _skel
     void addSkeleton(dynamics::Skeleton* _skeleton);
 
+    void removeSkeleton(dynamics::Skeleton* _skeleton);
+
     /// @brief Get the dof index for the indexed skeleton.
     /// @param[in] _index
     int getIndex(int _index) const;
@@ -166,10 +162,10 @@ public:
     //--------------------------------------------------------------------------
 
     //--------------------------------------------------------------------------
-    // Collision
+    // Constraint
     //--------------------------------------------------------------------------
-    /// @brief Get the collision handler.
-    constraint::ConstraintDynamics* getCollisionHandle() const;
+    /// @brief Get the constraint handler.
+    constraint::ConstraintDynamics* getConstraintHandler() const;
 
 protected:
     //--------------------------------------------------------------------------
@@ -199,8 +195,8 @@ protected:
     /// @brief The integrator.
     integration::Integrator* mIntegrator;
 
-    /// @brief The collision handler.
-    constraint::ConstraintDynamics* mCollisionHandle;
+    /// @brief The constraint handler.
+    constraint::ConstraintDynamics* mConstraintHandler;
 
 private:
 };

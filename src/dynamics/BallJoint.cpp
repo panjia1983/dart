@@ -44,10 +44,8 @@ namespace dart {
 namespace dynamics {
 
 BallJoint::BallJoint(const std::string& _name)
-    : Joint(_name)
+    : Joint(BALL, _name)
 {
-    mJointType = BALL;
-
     mGenCoords.push_back(&mCoordinate[0]);
     mGenCoords.push_back(&mCoordinate[1]);
     mGenCoords.push_back(&mCoordinate[2]);
@@ -64,7 +62,6 @@ BallJoint::~BallJoint()
 
 inline void BallJoint::updateTransform()
 {
-    // T
     Eigen::Vector3d q(mCoordinate[0].get_q(),
                       mCoordinate[1].get_q(),
                       mCoordinate[2].get_q());
@@ -74,9 +71,8 @@ inline void BallJoint::updateTransform()
             mT_ChildBodyToJoint.inverse();
 }
 
-inline void BallJoint::updateVelocity()
+inline void BallJoint::updateJacobian()
 {
-    // S
     Eigen::Vector3d q(mCoordinate[0].get_q(),
                       mCoordinate[1].get_q(),
                       mCoordinate[2].get_q());
@@ -94,14 +90,10 @@ inline void BallJoint::updateVelocity()
     mS.col(0) = math::AdT(mT_ChildBodyToJoint, J0);
     mS.col(1) = math::AdT(mT_ChildBodyToJoint, J1);
     mS.col(2) = math::AdT(mT_ChildBodyToJoint, J2);
-
-    // V = S * dq
-    mV = mS * get_dq();
 }
 
-inline void BallJoint::updateAcceleration()
+inline void BallJoint::updateJacobianTimeDeriv()
 {
-    // dS
     Eigen::Vector3d q(mCoordinate[0].get_q(),
                       mCoordinate[1].get_q(),
                       mCoordinate[2].get_q());
@@ -122,9 +114,6 @@ inline void BallJoint::updateAcceleration()
     mdS.col(0) = math::AdT(mT_ChildBodyToJoint, dJ0);
     mdS.col(1) = math::AdT(mT_ChildBodyToJoint, dJ1);
     mdS.col(2) = math::AdT(mT_ChildBodyToJoint, dJ2);
-
-    // dV = dS * dq + S * ddq
-    mdV = mdS * get_dq() + mS * get_ddq();
 }
 
 } // namespace dynamics

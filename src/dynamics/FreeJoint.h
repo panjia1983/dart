@@ -49,23 +49,20 @@ namespace dynamics {
 class FreeJoint : public Joint
 {
 public:
-    /// @brief
+    /// @brief Constructor.
     FreeJoint(const std::string& _name = "Free joint");
 
-    /// @brief
+    /// @brief Destructor.
     virtual ~FreeJoint();
 
-    // Documentation is inherited.
-    virtual double getPotentialEnergy() const { return 0.0; }
-
-    // Document inherited.
+    // Documentation inherited.
     virtual void updateTransform();
 
-    // Document inherited.
-    virtual void updateVelocity();
+    // Documentation inherited.
+    virtual void updateJacobian();
 
-    // Document inherited.
-    virtual void updateAcceleration();
+    // Documentation inherited.
+    virtual void updateJacobianTimeDeriv();
 
 protected:
     /// @brief

@@ -57,10 +57,10 @@ public:
         AO_ZXY = 3
     };
 
-    /// @brief
+    /// @brief Constructor.
     EulerJoint(const std::string& _name = "Euler joint");
 
-    /// @brief
+    /// @brief Destructor.
     virtual ~EulerJoint();
 
     /// @brief
@@ -69,17 +69,14 @@ public:
     /// @brief
     AxisOrder getAxisOrder() const;
 
-    // Documentation is inherited.
-    virtual double getPotentialEnergy() const { return 0.0; }
-
-    // Document inherited.
+    // Documentation inherited.
     virtual void updateTransform();
 
-    // Document inherited.
-    virtual void updateVelocity();
+    // Documentation inherited.
+    virtual void updateJacobian();
 
-    // Document inherited.
-    virtual void updateAcceleration();
+    // Documentation inherited.
+    virtual void updateJacobianTimeDeriv();
 
 protected:
     /// @brief Euler angles X, Y, Z
@@ -87,8 +84,6 @@ protected:
 
     /// @brief
     AxisOrder mAxisOrder;
-
-private:
 
 public:
     //
