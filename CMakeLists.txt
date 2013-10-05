@@ -137,6 +137,7 @@ configure_file(${PC_CONFIG_IN} ${PC_CONFIG_OUT} @only)
 install(FILES ${PC_CONFIG_OUT} DESTINATION lib/pkgconfig)
 
 ###############
+include_directories(src/collision/bullet)
 add_subdirectory(src)
 enable_testing()
 add_subdirectory(unittests)
