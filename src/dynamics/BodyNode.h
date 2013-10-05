@@ -152,10 +152,12 @@ public:
     /// @brief
     void setLocalCOM(const Eigen::Vector3d& _com);
 
-    /// @brief
+    /// @brief Get a point vector from the origin of body frame to the center of
+    ///        mass in the body frame.
     const Eigen::Vector3d& getLocalCOM() const;
 
-    /// @brief
+    /// @brief Get a point vector from the origin of body frame to the center of
+    ///        mass in the world frame.
     Eigen::Vector3d getWorldCOM() const;
 
     /// @brief
@@ -207,7 +209,7 @@ public:
     int getNumChildBodyNodes() const;
 
     /// @brief
-    void addMarker(Marker* _h);
+    void addMarker(Marker* _marker);
 
     /// @brief
     int getNumMarkers() const;
@@ -267,7 +269,8 @@ public:
     ///        Jacobian is expressed in the world frame.
     /// @param[in] _offset Point vector from the origin of this body frame where
     ///                    the point vector is expressed in the world frame.
-    math::Jacobian getWorldJacobian(const Eigen::Vector3d& _offset) const;
+    math::Jacobian getWorldJacobian(
+            const Eigen::Vector3d& _offset = Eigen::Vector3d::Zero()) const;
 
     /// @brief Get time derivative of generalized Jacobian at the origin of this
     ///        body node where the Jacobian is expressed in this body node
