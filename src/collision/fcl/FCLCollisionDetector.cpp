@@ -85,17 +85,27 @@ bool FCLCollisionDetector::detectCollision(bool _checkAllCollisions,
         FCLCollisionNode* collNode1 = dynamic_cast<FCLCollisionNode*>(mCollisionNodes[i]);
         FCLCollisionNode* collNode2 = dynamic_cast<FCLCollisionNode*>(mCollisionNodes[j]);
 
+        dynamics::BodyNode* bodyNode1 = collNode1->getBodyNode();
+        dynamics::BodyNode* bodyNode2 = collNode2->getBodyNode();
+
         if (!isCollidable(collNode1, collNode2))
             continue;
 
-        for(int k = 0; k < collNode1->getNumCollisionGeometries(); k++)
-        for(int l = 0; l < collNode2->getNumCollisionGeometries(); l++)
+        for(int k = 0; k < collNode1->getNumCollisionObjects(); k++)
+        for(int l = 0; l < collNode2->getNumCollisionObjects(); l++)
         {
             int currContactNum = mContacts.size();
-            fcl::collide(collNode1->getCollisionGeometry(k),
-                         collNode1->getFCLTransform(k),
-                         collNode2->getCollisionGeometry(l),
-                         collNode2->getFCLTransform(l),
+
+            dynamics::Shape* shape1 = static_cast<dynamics::Shape*>(collNode1->getCollisionObject(k)->getUserData());
+            dynamics::Shape* shape2 = static_cast<dynamics::Shape*>(collNode1->getCollisionObject(l)->getUserData());
+
+            collNode1->getCollisionObject(k)->setTransform(
+                        convTransform(bodyNode1->getWorldTransform() * shape1->getLocalTransform()));
+            collNode2->getCollisionObject(l)->setTransform(
+                        convTransform(bodyNode2->getWorldTransform() * shape2->getLocalTransform()));
+
+            fcl::collide(collNode1->getCollisionObject(k),
+                         collNode2->getCollisionObject(l),
                          request, result);
 
             unsigned int numContacts = result.numContacts();
@@ -108,9 +118,9 @@ bool FCLCollisionDetector::detectCollision(bool _checkAllCollisions,
                 contactPair.point(0) = contact.pos[0];
                 contactPair.point(1) = contact.pos[1];
                 contactPair.point(2) = contact.pos[2];
-                contactPair.normal(0) = contact.normal[0];
-                contactPair.normal(1) = contact.normal[1];
-                contactPair.normal(2) = contact.normal[2];
+                contactPair.normal(0) = -contact.normal[0];
+                contactPair.normal(1) = -contact.normal[1];
+                contactPair.normal(2) = -contact.normal[2];
                 contactPair.collisionNode1 = findCollisionNode(contact.o1);
                 contactPair.collisionNode2 = findCollisionNode(contact.o2);
                 assert(contactPair.collisionNode1 != NULL);
@@ -163,9 +173,9 @@ CollisionNode* FCLCollisionDetector::findCollisionNode(
     for (int i = 0; i < numCollNodes; ++i)
     {
         FCLCollisionNode* collisionNode = dynamic_cast<FCLCollisionNode*>(mCollisionNodes[i]);
-        for(int j = 0; j < collisionNode->getNumCollisionGeometries(); j++)
+        for(int j = 0; j < collisionNode->getNumCollisionObjects(); j++)
         {
-            if (collisionNode->getCollisionGeometry(j) == _fclCollGeom)
+            if (collisionNode->getCollisionObject(j)->getCollisionGeometry() == _fclCollGeom)
                 return mCollisionNodes[i];
         }
     }

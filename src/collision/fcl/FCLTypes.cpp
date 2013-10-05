@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Author(s): Jeongseok Lee <jslee02@gmail.com>
- * Date: 05/01/2013
+ * Date: 10/05/2013
  *
  * Geoorgia Tech Graphics Lab and Humanoid Robotics Lab
  *
@@ -35,46 +35,18 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DART_COLLISION_FCL_CONLLISION_DETECTOR_H
-#define DART_COLLISION_FCL_CONLLISION_DETECTOR_H
-
-#include <vector>
-#include <map>
-#include <Eigen/Dense>
-#include <fcl/collision.h>
-#include "collision/CollisionDetector.h"
 #include "collision/fcl/FCLTypes.h"
 
 namespace dart {
 namespace collision {
 
-class FCLCollisionNode;
-
-/// @brief
-class FCLCollisionDetector : public CollisionDetector {
-public:
-    /// @brief
-    FCLCollisionDetector();
-
-    /// @brief
-    virtual ~FCLCollisionDetector();
-
-    // Documentation inherited
-    virtual CollisionNode* createCollisionNode(dynamics::BodyNode* _bodyNode);
-
-    // Documentation inherited
-    virtual bool detectCollision(bool _checkAllCollisions,
-                                bool _calculateContactPoints);
-
-    CollisionNode* findCollisionNode(const fcl::CollisionGeometry* _fclCollGeom) const;
-
-protected:
-    virtual bool detectCollision(CollisionNode* _node1,
-                                CollisionNode* _node2,
-                                bool _calculateContactPoints);
-};
+fcl::Transform3f convTransform(const Eigen::Isometry3d& _T)
+{
+    return fcl::Transform3f(fcl::Matrix3f(_T(0,0), _T(0,1), _T(0,2),
+                                          _T(1,0), _T(1,1), _T(1,2),
+                                          _T(2,0), _T(2,1), _T(2,2)),
+                            fcl::Vec3f(_T(0,3), _T(1,3), _T(2,3)));
+}
 
 } // namespace collision
 } // namespace dart
-
-#endif // #ifndef DART_COLLISION_FCL_CONLLISION_DETECTOR_H

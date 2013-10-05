@@ -40,6 +40,7 @@
 #include <fcl/shape/geometric_shape_to_BVH_model.h>
 
 #include "dynamics/BodyNode.h"
+#include "dynamics/BoxShape.h"
 #include "dynamics/EllipsoidShape.h"
 #include "dynamics/CylinderShape.h"
 #include "dynamics/MeshShape.h"
@@ -59,41 +60,54 @@ FCLCollisionNode::FCLCollisionNode(dynamics::BodyNode* _bodyNode)
         switch (shape->getShapeType())
         {
             case dynamics::Shape::BOX:
-                mCollisionGeometries.push_back(new fcl::Box(shape->getDim()[0],
-                                                            shape->getDim()[1],
-                                                            shape->getDim()[2]));
+            {
+                dynamics::BoxShape* box = dynamic_cast<dynamics::BoxShape*>(shape);
+                //fcl::CollisionGeometry* collGeom = new fcl::Box(box->getDim()[0], box->getDim()[1], box->getDim()[2]);
+                fcl::BVHModel<fcl::OBBRSS>* collGeom = new fcl::BVHModel<fcl::OBBRSS>();
+                fcl::Box* fclBox = new fcl::Box(box->getDim()[0], box->getDim()[1], box->getDim()[2]);
+                generateBVHModel(*collGeom, *fclBox, fcl::Transform3f());
+                fcl::CollisionObject* collObj = new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(collGeom));
+                collObj->setUserData(shape);
+                mCollisionObjects.push_back(collObj);
                 break;
+            }
             case dynamics::Shape::ELLIPSOID:
             {
-                dynamics::EllipsoidShape* ellipsoid
-                        = dynamic_cast<dynamics::EllipsoidShape*>(shape);
+                dynamics::EllipsoidShape* ellipsoid = dynamic_cast<dynamics::EllipsoidShape*>(shape);
 
                 if (ellipsoid->isSphere())
-                    mCollisionGeometries.push_back(new fcl::Sphere(ellipsoid->getDim()[0] * 0.5));
+                {
+                    fcl::CollisionGeometry* collGeom = new fcl::Sphere(shape->getDim()[0] * 0.5);
+                    fcl::CollisionObject* collObj = new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(collGeom));
+                    collObj->setUserData(shape);
+                    mCollisionObjects.push_back(collObj);
+                }
                 else
-                    mCollisionGeometries.push_back(createEllipsoid<fcl::OBBRSS>(ellipsoid->getDim()[0],
-                                                                                ellipsoid->getDim()[1],
-                                                                                ellipsoid->getDim()[2]));
+                {
+                    fcl::CollisionGeometry* collGeom = createEllipsoid<fcl::OBBRSS>(ellipsoid->getDim()[0], ellipsoid->getDim()[1], ellipsoid->getDim()[2]);
+                    fcl::CollisionObject* collObj = new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(collGeom));
+                    collObj->setUserData(shape);
+                    mCollisionObjects.push_back(collObj);
+                }
                 break;
             }
             case dynamics::Shape::CYLINDER:
             {
-                dynamics::CylinderShape* cylinder
-                        = dynamic_cast<dynamics::CylinderShape*>(shape);
-                mCollisionGeometries.push_back(new fcl::Cylinder(cylinder->getRadius(),
-                                                                 cylinder->getHeight()));
+                dynamics::CylinderShape* cylinder = dynamic_cast<dynamics::CylinderShape*>(shape);
+                fcl::CollisionGeometry* collGeom = new fcl::Cylinder(cylinder->getRadius(), cylinder->getHeight());
+                fcl::CollisionObject* collObj = new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(collGeom));
+                collObj->setUserData(shape);
+                mCollisionObjects.push_back(collObj);
                 break;
             }
             case dynamics::Shape::MESH:
             {
-                dynamics::MeshShape *shapeMesh
-                        = dynamic_cast<dynamics::MeshShape *>(shape);
+                dynamics::MeshShape *shapeMesh = dynamic_cast<dynamics::MeshShape *>(shape);
 
-                if(shapeMesh)
-                    mCollisionGeometries.push_back(createMesh<fcl::OBBRSS>(shape->getDim()[0],
-                                                                           shape->getDim()[1],
-                                                                           shape->getDim()[2],
-                                                                           shapeMesh->getMesh()));
+                fcl::CollisionGeometry* collGeom = createMesh<fcl::OBBRSS>(shape->getDim()[0], shape->getDim()[1], shape->getDim()[2], shapeMesh->getMesh());
+                fcl::CollisionObject* collObj = new fcl::CollisionObject(boost::shared_ptr<fcl::CollisionGeometry>(collGeom));
+                collObj->setUserData(shape);
+                mCollisionObjects.push_back(collObj);
                 break;
             }
             default:
@@ -111,14 +125,14 @@ FCLCollisionNode::~FCLCollisionNode()
 {
 }
 
-int FCLCollisionNode::getNumCollisionGeometries() const
+int FCLCollisionNode::getNumCollisionObjects() const
 {
-    return mCollisionGeometries.size();
+    return mCollisionObjects.size();
 }
 
-fcl::CollisionGeometry*FCLCollisionNode::getCollisionGeometry(int _idx) const
+fcl::CollisionObject* FCLCollisionNode::getCollisionObject(int _idx) const
 {
-    return mCollisionGeometries[_idx];
+    return mCollisionObjects[_idx];
 }
 
 fcl::Transform3f FCLCollisionNode::getFCLTransform(int _idx) const

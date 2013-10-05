@@ -40,6 +40,7 @@
 
 #include <Eigen/Dense>
 #include <fcl/collision.h>
+#include <fcl/collision_object.h>
 #include <fcl/BVH/BVH_model.h>
 
 #include "collision/CollisionNode.h"
@@ -63,10 +64,10 @@ public:
     virtual ~FCLCollisionNode();
 
     /// @brief
-    int getNumCollisionGeometries() const;
+    int getNumCollisionObjects() const;
 
     /// @brief
-    fcl::CollisionGeometry* getCollisionGeometry(int _idx) const;
+    fcl::CollisionObject* getCollisionObject(int _idx) const;
 
     /// @brief
     fcl::Transform3f getFCLTransform(int _idx) const;
@@ -75,7 +76,8 @@ protected:
 
 private:
     /// @brief
-    std::vector<fcl::CollisionGeometry*> mCollisionGeometries;
+    std::vector<fcl::CollisionObject*> mCollisionObjects;
+    //std::vector<fcl::CollisionGeometry*> mCollisionGeometries;
     std::vector<dynamics::Shape*> mShapes;
 };
 
