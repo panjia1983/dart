@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Author(s): Jeongseok Lee <jslee02@gmail.com>
- * Date: 05/11/2013
+ * Date: 10/05/2013
  *
  * Geoorgia Tech Graphics Lab and Humanoid Robotics Lab
  *
@@ -35,57 +35,55 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DART_COLLISION_BULLET_CONLLISION_NODE_H
-#define DART_COLLISION_BULLET_CONLLISION_NODE_H
+#ifndef DART_DYNAMICS_PLANE_SHAPE_H
+#define DART_DYNAMICS_PLANE_SHAPE_H
 
-#include <Eigen/Dense>
-
-#include "dynamics/Shape.h"
-#include "collision/CollisionNode.h"
-#include "collision/bullet/btBulletCollisionCommon.h"
+#include "Shape.h"
 
 namespace dart {
-
 namespace dynamics {
-class BodyNode;
-}
 
-namespace collision {
-
-class BulletCollisionNode;
-
-struct btUserData
-{
-    dynamics::BodyNode* bodyNode;
-    dynamics::Shape* shape;
-    BulletCollisionNode* btCollNode;
-};
-
-/// @brief
-class BulletCollisionNode : public CollisionNode
+class PlaneShape : public Shape
 {
 public:
-    /// @brief
-    BulletCollisionNode(dynamics::BodyNode* _bodyNode);
+    /// @brief Constructor.
+    PlaneShape(const Eigen::Vector3d& _normal, const Eigen::Vector3d& _point);
+
+    // Documentation inherited.
+    void draw(renderer::RenderInterface* _ri = NULL,
+              const Eigen::Vector4d& _col = Eigen::Vector4d::Ones(),
+              bool _default = true) const;
+
+    // Documentation inherited.
+    virtual Eigen::Matrix3d computeInertia(double _mass) const;
 
     /// @brief
-    virtual ~BulletCollisionNode();
-
-    /// @brief Update transformation of all the bullet collision objects.
-    void updateBTCollisionObjects();
+    void setNormal(const Eigen::Vector3d& _normal);
 
     /// @brief
-    int getNumBTCollisionObjects() const;
+    const Eigen::Vector3d& getNormal() const;
 
     /// @brief
-    btCollisionObject* getBTCollisionObject(int _i);
+    void setPoint(const Eigen::Vector3d& _point);
+
+    /// @brief
+    const Eigen::Vector3d& getPoint() const;
 
 private:
+    // Documentation inherited.
+    void computeVolume();
+
     /// @brief
-    std::vector<btCollisionObject*> mbtCollsionObjects;
+    Eigen::Vector3d mNormal;
+
+    /// @brief
+    Eigen::Vector3d mPoint;
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
-} // namespace collision
+} // namespace dynamics
 } // namespace dart
 
-#endif // #ifndef DART_COLLISION_BULLET_CONLLISION_NODE_H
+#endif // #ifndef DART_DYNAMICS_PLANE_SHAPE_H

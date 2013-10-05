@@ -1,8 +1,6 @@
 #include "common/Timer.h"
 #include "math/Helpers.h"
 #include "lcpsolver/LCPSolver.h"
-#include "collision/fcl/FCLCollisionDetector.h"
-#include "collision/dart/DARTCollisionDetector.h"
 #include "dynamics/BodyNode.h"
 #include "dynamics/GenCoord.h"
 #include "dynamics/Joint.h"

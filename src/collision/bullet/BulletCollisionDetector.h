@@ -41,7 +41,10 @@
 #include <vector>
 #include <map>
 #include <Eigen/Dense>
+
 #include "collision/CollisionDetector.h"
+#include "collision/bullet/BulletTypes.h"
+#include "collision/bullet/btBulletCollisionCommon.h"
 
 namespace dart {
 namespace collision {
@@ -49,7 +52,8 @@ namespace collision {
 class BulletCollisionNode;
 
 /// @brief
-class BulletCollisionDetector : public CollisionDetector {
+class BulletCollisionDetector : public CollisionDetector
+{
 public:
     /// @brief
     BulletCollisionDetector();
@@ -65,9 +69,13 @@ public:
                                 bool _calculateContactPoints);
 
 protected:
+    // Documentation inherited
     virtual bool detectCollision(CollisionNode* _node1,
-                                CollisionNode* _node2,
-                                bool _calculateContactPoints);
+                                 CollisionNode* _node2,
+                                 bool _calculateContactPoints);
+
+    /// @brief
+    btCollisionWorld* mBulletCollisionWorld;
 };
 
 } // namespace collision

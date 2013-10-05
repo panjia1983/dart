@@ -134,7 +134,6 @@ public:
     /// @brief
     void setNumMaxContacs(int _num);
 
-protected:
     /// @brief
     virtual bool detectCollision(CollisionNode* _node1, CollisionNode* _node2,
                                  bool _calculateContactPoints) = 0;
@@ -143,6 +142,7 @@ protected:
     bool isCollidable(const CollisionNode* _node1,
                       const CollisionNode* _node2);
 
+protected:
     /// @brief
     std::vector<Contact> mContacts;
 

@@ -43,6 +43,9 @@
 
 #include "constraint/Constraint.h"
 #include "collision/CollisionDetector.h"
+#include "collision/bullet/BulletCollisionDetector.h"
+#include "collision/dart/DARTCollisionDetector.h"
+#include "collision/fcl/FCLCollisionDetector.h"
 #include "collision/fcl_mesh/FCLMeshCollisionDetector.h"
 
 namespace dart {
@@ -57,7 +60,8 @@ namespace constraint {
 
 class ConstraintDynamics {
 public:
-    ConstraintDynamics(const std::vector<dynamics::Skeleton*>& _skels, double _dt, double _mu = 1.0, int _d = 4, bool _useODE = true, collision::CollisionDetector* _collisionDetector = new collision::FCLMeshCollisionDetector());
+    ConstraintDynamics(const std::vector<dynamics::Skeleton*>& _skels, double _dt, double _mu = 1.0, int _d = 4,
+                       bool _useODE = true, collision::CollisionDetector* _collisionDetector = new collision::BulletCollisionDetector());
     virtual ~ConstraintDynamics();
 
     void computeConstraintForces();

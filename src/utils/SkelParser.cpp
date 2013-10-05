@@ -46,6 +46,7 @@
 #include "dynamics/BoxShape.h"
 #include "dynamics/CylinderShape.h"
 #include "dynamics/EllipsoidShape.h"
+#include "dynamics/PlaneShape.h"
 #include "dynamics/WeldJoint.h"
 #include "dynamics/PrismaticJoint.h"
 #include "dynamics/RevoluteJoint.h"
@@ -376,6 +377,16 @@ dynamics::Shape* SkelParser::readShape(tinyxml2::XMLElement* vizElement)
         double height = getValueDouble(cylinderElement, "height");
 
         newShape = new dynamics::CylinderShape(radius, height);
+    }
+    else if (hasElement(geometryElement, "plane"))
+    {
+        tinyxml2::XMLElement* cylinderElement =
+                getElement(geometryElement, "plane");
+
+        Eigen::Vector3d normal = getValueVector3d(cylinderElement, "normal");
+        Eigen::Vector3d point = getValueVector3d(cylinderElement, "point");
+
+        newShape = new dynamics::PlaneShape(normal, point);
     }
     else
     {

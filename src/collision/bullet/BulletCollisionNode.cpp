@@ -41,9 +41,11 @@
 #include "dynamics/BoxShape.h"
 #include "dynamics/EllipsoidShape.h"
 #include "dynamics/CylinderShape.h"
+#include "dynamics/PlaneShape.h"
 #include "dynamics/MeshShape.h"
 
 #include "collision/bullet/BulletCollisionNode.h"
+#include "collision/bullet/BulletTypes.h"
 
 namespace dart {
 namespace collision {
@@ -54,23 +56,41 @@ BulletCollisionNode::BulletCollisionNode(dynamics::BodyNode* _bodyNode)
     for(int i = 0; i < _bodyNode->getNumCollisionShapes(); i++)
     {
         dynamics::Shape* shape = _bodyNode->getCollisionShape(i);
-        mShapes.push_back(shape);
         switch (shape->getShapeType())
         {
             case dynamics::Shape::BOX:
             {
-                dynamics::BoxShape* box
-                        = dynamic_cast<dynamics::BoxShape*>(shape);
+                dynamics::BoxShape* box = dynamic_cast<dynamics::BoxShape*>(shape);
+
+                btBoxShape* btBox = new btBoxShape(btVector3(box->getDim()[0]*0.5, box->getDim()[1]*0.5, box->getDim()[2]*0.5));
+                btBox->setMargin(0.0);
+                btCollisionObject* btCollObj = new btCollisionObject();
+                btCollObj->setCollisionShape(btBox);
+                btUserData* userData = new btUserData;
+                userData->bodyNode = _bodyNode;
+                userData->shape = shape;
+                userData->btCollNode = this;
+                btCollObj->setUserPointer(userData);
+                mbtCollsionObjects.push_back(btCollObj);
 
                 break;
             }
             case dynamics::Shape::ELLIPSOID:
             {
-                dynamics::EllipsoidShape* ellipsoid
-                        = dynamic_cast<dynamics::EllipsoidShape*>(shape);
+                dynamics::EllipsoidShape* ellipsoid = dynamic_cast<dynamics::EllipsoidShape*>(shape);
 
                 if (ellipsoid->isSphere())
                 {
+                    btSphereShape* btCylinder = new btSphereShape(ellipsoid->getDim()[0] * 0.5);
+                    btCylinder->setMargin(0.0);
+                    btCollisionObject* btCollObj = new btCollisionObject();
+                    btCollObj->setCollisionShape(btCylinder);
+                    btUserData* userData = new btUserData;
+                    userData->bodyNode = _bodyNode;
+                    userData->shape = shape;
+                    userData->btCollNode = this;
+                    btCollObj->setUserPointer(userData);
+                    mbtCollsionObjects.push_back(btCollObj);
                 }
                 else
                 {
@@ -80,8 +100,37 @@ BulletCollisionNode::BulletCollisionNode(dynamics::BodyNode* _bodyNode)
             }
             case dynamics::Shape::CYLINDER:
             {
-                dynamics::CylinderShape* cylinder
-                        = dynamic_cast<dynamics::CylinderShape*>(shape);
+                dynamics::CylinderShape* cylinder = dynamic_cast<dynamics::CylinderShape*>(shape);
+
+                btCylinderShapeZ* btCylinder = new btCylinderShapeZ(btVector3(cylinder->getRadius(), cylinder->getRadius(), cylinder->getHeight() * 0.5));
+                btCylinder->setMargin(0.0);
+                btCollisionObject* btCollObj = new btCollisionObject();
+                btCollObj->setCollisionShape(btCylinder);
+                btUserData* userData = new btUserData;
+                userData->bodyNode = _bodyNode;
+                userData->shape = shape;
+                userData->btCollNode = this;
+                btCollObj->setUserPointer(userData);
+                mbtCollsionObjects.push_back(btCollObj);
+
+                break;
+            }
+            case dynamics::Shape::PLANE:
+            {
+                dynamics::PlaneShape* plane = dynamic_cast<dynamics::PlaneShape*>(shape);
+
+                double d = plane->getNormal().dot(plane->getPoint()) / plane->getNormal().squaredNorm();
+
+                btStaticPlaneShape* btStaticPlane = new btStaticPlaneShape(convertVector3(plane->getNormal()), d);
+                btStaticPlane->setMargin(0.0);
+                btCollisionObject* btCollObj = new btCollisionObject();
+                btCollObj->setCollisionShape(btStaticPlane);
+                btUserData* userData = new btUserData;
+                userData->bodyNode = _bodyNode;
+                userData->shape = shape;
+                userData->btCollNode = this;
+                btCollObj->setUserPointer(userData);
+                mbtCollsionObjects.push_back(btCollObj);
 
                 break;
             }
@@ -105,6 +154,27 @@ BulletCollisionNode::BulletCollisionNode(dynamics::BodyNode* _bodyNode)
 
 BulletCollisionNode::~BulletCollisionNode()
 {
+}
+
+void BulletCollisionNode::updateBTCollisionObjects()
+{
+    for (int i = 0; i < mbtCollsionObjects.size(); ++i)
+    {
+        btUserData* userData = static_cast<btUserData*>(mbtCollsionObjects[i]->getUserPointer());
+        dynamics::Shape* shape = userData->shape;
+        btTransform T = convertTransform(mBodyNode->getWorldTransform() * shape->getLocalTransform());
+        mbtCollsionObjects[i]->setWorldTransform(T);
+    }
+}
+
+int BulletCollisionNode::getNumBTCollisionObjects() const
+{
+    return mbtCollsionObjects.size();
+}
+
+btCollisionObject*BulletCollisionNode::getBTCollisionObject(int _i)
+{
+    return mbtCollsionObjects[_i];
 }
 
 } // namespace collision

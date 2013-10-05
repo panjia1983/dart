@@ -113,6 +113,9 @@ Eigen::VectorXd World::evalDeriv()
          itrSkeleton != mSkeletons.end();
          ++itrSkeleton)
     {
+        // skip immobile objects in forward simulation
+        if (!(*itrSkeleton)->isMobile())
+            continue;
         (*itrSkeleton)->computeEquationsOfMotionID(mGravity);
         //(*itrSkeleton)->computeEquationsOfMotionFS(mGravity);
     }
@@ -136,6 +139,9 @@ Eigen::VectorXd World::evalDeriv()
          itrSkeleton != mSkeletons.end();
          ++itrSkeleton)
     {
+        // skip immobile objects in forward simulation
+        if (!(*itrSkeleton)->isMobile())
+            continue;
         //(*itrSkeleton)->computeForwardDynamicsID(mGravity);
         (*itrSkeleton)->computeForwardDynamicsFS(mGravity);
     }

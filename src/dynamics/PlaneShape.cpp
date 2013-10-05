@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Author(s): Jeongseok Lee <jslee02@gmail.com>
- * Date: 05/11/2013
+ * Date: 10/05/2013
  *
  * Geoorgia Tech Graphics Lab and Humanoid Robotics Lab
  *
@@ -35,57 +35,68 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DART_COLLISION_BULLET_CONLLISION_NODE_H
-#define DART_COLLISION_BULLET_CONLLISION_NODE_H
+#include "dynamics/PlaneShape.h"
 
-#include <Eigen/Dense>
-
-#include "dynamics/Shape.h"
-#include "collision/CollisionNode.h"
-#include "collision/bullet/btBulletCollisionCommon.h"
+#include "renderer/RenderInterface.h"
 
 namespace dart {
-
 namespace dynamics {
-class BodyNode;
+
+PlaneShape::PlaneShape(const Eigen::Vector3d& _normal, const Eigen::Vector3d& _point)
+    : Shape(PLANE),
+      mNormal(_normal),
+      mPoint(_point)
+{
 }
 
-namespace collision {
-
-class BulletCollisionNode;
-
-struct btUserData
+void PlaneShape::draw(renderer::RenderInterface* _ri, const Eigen::Vector4d& _color, bool _useDefaultColor) const
 {
-    dynamics::BodyNode* bodyNode;
-    dynamics::Shape* shape;
-    BulletCollisionNode* btCollNode;
-};
+    if (!_ri) return;
+    if (!_useDefaultColor)
+        _ri->setPenColor(_color);
+    else
+        _ri->setPenColor(mColor);
+    _ri->pushMatrix();
+    _ri->transform(mTransform);
+    //_ri->drawCube(mDim);
+    _ri->popMatrix();
+}
 
-/// @brief
-class BulletCollisionNode : public CollisionNode
+Eigen::Matrix3d PlaneShape::computeInertia(double _mass) const
 {
-public:
-    /// @brief
-    BulletCollisionNode(dynamics::BodyNode* _bodyNode);
+    Eigen::Matrix3d inertia = Eigen::Matrix3d::Zero();
 
-    /// @brief
-    virtual ~BulletCollisionNode();
+//    inertia(0, 0) = _mass / 12.0 * (mDim(1) * mDim(1) + mDim(2) * mDim(2));
+//    inertia(1, 1) = _mass / 12.0 * (mDim(0) * mDim(0) + mDim(2) * mDim(2));
+//    inertia(2, 2) = _mass / 12.0 * (mDim(0) * mDim(0) + mDim(1) * mDim(1));
 
-    /// @brief Update transformation of all the bullet collision objects.
-    void updateBTCollisionObjects();
+    return inertia;
+}
 
-    /// @brief
-    int getNumBTCollisionObjects() const;
+void PlaneShape::setNormal(const Eigen::Vector3d& _normal)
+{
+    mNormal = _normal.normalized();
+}
 
-    /// @brief
-    btCollisionObject* getBTCollisionObject(int _i);
+const Eigen::Vector3d& PlaneShape::getNormal() const
+{
+    return mNormal;
+}
 
-private:
-    /// @brief
-    std::vector<btCollisionObject*> mbtCollsionObjects;
-};
+void PlaneShape::setPoint(const Eigen::Vector3d& _point)
+{
+    mPoint = _point;
+}
 
-} // namespace collision
+const Eigen::Vector3d& PlaneShape::getPoint() const
+{
+    return mPoint;
+}
+
+void PlaneShape::computeVolume()
+{
+    mVolume = 0.0;
+}
+
+} // namespace dynamics
 } // namespace dart
-
-#endif // #ifndef DART_COLLISION_BULLET_CONLLISION_NODE_H
