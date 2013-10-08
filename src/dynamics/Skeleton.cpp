@@ -409,7 +409,7 @@ void Skeleton::computeEquationsOfMotionID(
     int n = getNumGenCoords();
 
     // Skip immobile or 0-dof skeleton
-    if (!isMobile() == true || n == 0)
+    if (!isMobile() || n == 0)
         return;
 
     // Save current tau
@@ -469,7 +469,7 @@ void Skeleton::computeForwardDynamicsFS(
     int n = getNumGenCoords();
 
     // Skip immobile or 0-dof skeleton
-    if (!isMobile() == true || n == 0)
+    if (!isMobile() || n == 0)
         return;
 
     // We assume that updateForwardKinematics() is called before
