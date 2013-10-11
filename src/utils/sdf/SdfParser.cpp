@@ -7,6 +7,7 @@
 #include "dynamics/BoxShape.h"
 #include "dynamics/CylinderShape.h"
 #include "dynamics/EllipsoidShape.h"
+#include "dynamics/PlaneShape.h"
 #include "dynamics/WeldJoint.h"
 #include "dynamics/PrismaticJoint.h"
 #include "dynamics/RevoluteJoint.h"
@@ -373,8 +374,11 @@ dynamics::Shape* SdfParser::readShape(tinyxml2::XMLElement* _shapelement)
         //Eigen::Vector3d normal = getValueVector3d(planeElement, "normal");
 
         Eigen::Vector3d size(visSize(0), visSize(1), 0.001);
+        Eigen::Vector3d normal = getValueVector3d(planeElement, "normal");
+        //Eigen::Vector3d point = getValueVector3d(planeElement, "point");
+        Eigen::Vector3d point = Eigen::Vector3d::Zero();
 
-        newShape = new dynamics::BoxShape(size);
+        newShape = new dynamics::PlaneShape(normal, point);
     }
     else if (hasElement(geometryElement, "mesh"))
     {
