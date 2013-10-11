@@ -51,12 +51,11 @@ struct CollisionFilter : public btOverlapFilterCallback
   // return true when pairs need collision
   virtual bool needBroadphaseCollision(btBroadphaseProxy *_proxy0, btBroadphaseProxy *_proxy1) const
     {
-      assert(_proxy0 != NULL && _proxy1 != NULL);
+      assert((_proxy0 != NULL && _proxy1 != NULL) &
+             "Bullet broadphase overlapping pair proxies are NULL");
 
-      bool collide = (_proxy0->m_collisionFilterGroup
-          & _proxy1->m_collisionFilterMask) != 0;
-      collide = collide && (_proxy1->m_collisionFilterGroup
-          & _proxy0->m_collisionFilterMask);
+      bool collide = (_proxy0->m_collisionFilterGroup & _proxy1->m_collisionFilterMask) != 0;
+      collide = collide && (_proxy1->m_collisionFilterGroup & _proxy0->m_collisionFilterMask);
 
       btCollisionObject* collObj0 = static_cast<btCollisionObject*>(_proxy0->m_clientObject);
       btCollisionObject* collObj1 = static_cast<btCollisionObject*>(_proxy1->m_clientObject);
@@ -64,22 +63,28 @@ struct CollisionFilter : public btOverlapFilterCallback
       btUserData* userData0 = static_cast<btUserData*>(collObj0->getUserPointer());
       btUserData* userData1 = static_cast<btUserData*>(collObj1->getUserPointer());
 
+//      if (!userData0->btCollDet->isCollidable(userData0->btCollNode, userData1->btCollNode))
+//      {
+//          std::cout<< "false.\n";
+//          return false;
+//      }
+
+      if (userData0->bodyNode == userData1->bodyNode)
+          return false;
+
       if (!userData0->bodyNode->isCollidable())
       {
-          std::cout<< "false.\n";
           return false;
       }
 
       if (!userData1->bodyNode->isCollidable())
       {
-          std::cout<< "false.\n";
           return false;
       }
 
       if (userData0->bodyNode->getSkeleton() == userData1->bodyNode->getSkeleton())
           if (!userData0->bodyNode->getSkeleton()->isSelfCollidable())
           {
-              std::cout<< "false.\n";
               return false;
           }
 
@@ -99,7 +104,7 @@ BulletCollisionDetector::BulletCollisionDetector()
 
     mBulletCollisionWorld = new btCollisionWorld(dispatcher, broadphasePairCache, collisionConfiguration);
 
-    btOverlapFilterCallback*filterCallback = new CollisionFilter();
+    btOverlapFilterCallback* filterCallback = new CollisionFilter();
     btOverlappingPairCache* pairCache = mBulletCollisionWorld->getPairCache();
     assert(pairCache != NULL);
     pairCache->setOverlapFilterCallback(filterCallback);
@@ -114,27 +119,28 @@ CollisionNode* BulletCollisionDetector::createCollisionNode(dynamics::BodyNode* 
     BulletCollisionNode* newBTCollNode = new BulletCollisionNode(_bodyNode);
 
     for (int i = 0; i < newBTCollNode->getNumBTCollisionObjects(); ++i)
+    {
+        btUserData* userData = static_cast<btUserData*>(newBTCollNode->getBTCollisionObject(i)->getUserPointer());
+        userData->btCollDet = this;
         mBulletCollisionWorld->addCollisionObject(newBTCollNode->getBTCollisionObject(i));
+    }
 
     return newBTCollNode;
 }
 
 struct btContactResultCB : public btCollisionWorld::ContactResultCallback
 {
-    virtual	btScalar addSingleResult(btManifoldPoint& cp,
-                                     const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0,
-                                     const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1)
+    virtual	btScalar addSingleResult(
+            btManifoldPoint& cp,
+            const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0,
+            const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1)
     {
         Contact contactPair;
         contactPair.point = convertVector3(cp.getPositionWorldOnA());
         contactPair.normal = convertVector3(cp.m_normalWorldOnB);
         contactPair.penetrationDepth = -cp.m_distance1;
 
-        //std::cout << "distance: " << cp.m_distance1 << std::endl;
-
         mContacts.push_back(contactPair);
-
-        std::cout << "normal: " << contactPair.normal << std::endl;
 
         return 0;
     }
@@ -153,73 +159,101 @@ bool BulletCollisionDetector::detectCollision(bool _checkAllCollisions, bool _ca
     dispatchInfo.m_stepCount = 0;
     //dispatchInfo.m_debugDraw = getDebugDrawer();
 
-    //mBulletCollisionWorld->performDiscreteCollisionDetection();
+    mBulletCollisionWorld->performDiscreteCollisionDetection();
 
     //std::cout << "Number of collision objects: " << collWorld->getNumCollisionObjects() << std::endl;
 
     // TODO: _checkAllCollisions
     clearAllContacts();
 
-    for(int i = 0; i < mCollisionNodes.size(); i++)
-    for(int j = i + 1; j < mCollisionNodes.size(); j++)
+    int numManifolds = mBulletCollisionWorld->getDispatcher()->getNumManifolds();
+    for (int i = 0; i < numManifolds; ++i)
     {
-        //result.clear();
-        BulletCollisionNode* collNode1 = static_cast<BulletCollisionNode*>(mCollisionNodes[i]);
-        BulletCollisionNode* collNode2 = static_cast<BulletCollisionNode*>(mCollisionNodes[j]);
+        btPersistentManifold* contactManifold = mBulletCollisionWorld->getDispatcher()->getManifoldByIndexInternal(i);
+        const btCollisionObject* obA = contactManifold->getBody0();
+        const btCollisionObject* obB = contactManifold->getBody1();
 
-        if (!isCollidable(collNode1, collNode2))
-            continue;
+        btUserData* userDataA = static_cast<btUserData*>(obA->getUserPointer());
+        btUserData* userDataB = static_cast<btUserData*>(obB->getUserPointer());
 
-        for(int k = 0; k < collNode1->getNumBTCollisionObjects(); k++)
-        for(int l = 0; l < collNode2->getNumBTCollisionObjects(); l++)
+        int numContacts = contactManifold->getNumContacts();
+        for (int j = 0; j < numContacts; j++)
         {
-            int currContactNum = mContacts.size();
+            btManifoldPoint& cp = contactManifold->getContactPoint(j);
 
-            btContactResultCB result;
+            Contact contactPair;
+            contactPair.point = convertVector3(cp.getPositionWorldOnA());
+            contactPair.normal = convertVector3(cp.m_normalWorldOnB);
+            contactPair.penetrationDepth = -cp.m_distance1;
+            contactPair.collisionNode1 = userDataA->btCollNode;
+            contactPair.collisionNode2 = userDataB->btCollNode;
 
-            //------------------------------------------------------------------
-            // Collide
-            //------------------------------------------------------------------
-            mBulletCollisionWorld->contactPairTest(collNode1->getBTCollisionObject(k),
-                                       collNode2->getBTCollisionObject(l),
-                                       result);
-            //------------------------------------------------------------------
-
-            unsigned int numContacts = result.mContacts.size();
-
-            if (numContacts > 0)
-                std::cout << "Contact number: " << numContacts << std::endl;
-
-            for (int i = 0; i < numContacts; ++i)
-            {
-                result.mContacts[i].collisionNode1 = collNode1;
-                result.mContacts[i].collisionNode2 = collNode2;
-                mContacts.push_back(result.mContacts[i]);
-            }
-
-            std::vector<bool> markForDeletion(numContacts, false);
-            for (int m = 0; m < numContacts; m++)
-            {
-                for (int n = m + 1; n < numContacts; n++)
-                {
-                    Eigen::Vector3d diff =
-                            mContacts[currContactNum + m].point -
-                            mContacts[currContactNum + n].point;
-                    if (diff.dot(diff) < 1e-6)
-                    {
-                        markForDeletion[m] = true;
-                        break;
-                    }
-                }
-            }
-            for (int m = numContacts - 1; m >= 0; m--)
-            {
-                if (markForDeletion[m])
-                    mContacts.erase(mContacts.begin() + currContactNum + m);
-            }
-
+            mContacts.push_back(contactPair);
         }
     }
+
+
+//    for(int i = 0; i < mCollisionNodes.size(); i++)
+//    for(int j = i + 1; j < mCollisionNodes.size(); j++)
+//    {
+//        //result.clear();
+//        BulletCollisionNode* collNode1 = static_cast<BulletCollisionNode*>(mCollisionNodes[i]);
+//        BulletCollisionNode* collNode2 = static_cast<BulletCollisionNode*>(mCollisionNodes[j]);
+
+//        if (!isCollidable(collNode1, collNode2))
+//            continue;
+
+//        for(int k = 0; k < collNode1->getNumBTCollisionObjects(); k++)
+//        for(int l = 0; l < collNode2->getNumBTCollisionObjects(); l++)
+//        {
+//            int currContactNum = mContacts.size();
+
+//            btContactResultCB result;
+
+//            //------------------------------------------------------------------
+//            // Collide
+//            //------------------------------------------------------------------
+//            mBulletCollisionWorld->contactPairTest(
+//                        collNode1->getBTCollisionObject(k),
+//                        collNode2->getBTCollisionObject(l),
+//                        result);
+//            //------------------------------------------------------------------
+
+//            unsigned int numContacts = result.mContacts.size();
+
+//            if (numContacts > 0)
+//                std::cout << "Contact number: " << numContacts << std::endl;
+
+//            for (int i = 0; i < numContacts; ++i)
+//            {
+//                result.mContacts[i].collisionNode1 = collNode1;
+//                result.mContacts[i].collisionNode2 = collNode2;
+//                mContacts.push_back(result.mContacts[i]);
+//            }
+
+//            std::vector<bool> markForDeletion(numContacts, false);
+//            for (int m = 0; m < numContacts; m++)
+//            {
+//                for (int n = m + 1; n < numContacts; n++)
+//                {
+//                    Eigen::Vector3d diff =
+//                            mContacts[currContactNum + m].point -
+//                            mContacts[currContactNum + n].point;
+//                    if (diff.dot(diff) < 1e-6)
+//                    {
+//                        markForDeletion[m] = true;
+//                        break;
+//                    }
+//                }
+//            }
+//            for (int m = numContacts - 1; m >= 0; m--)
+//            {
+//                if (markForDeletion[m])
+//                    mContacts.erase(mContacts.begin() + currContactNum + m);
+//            }
+
+//        }
+//    }
 
     return !mContacts.empty();
 }

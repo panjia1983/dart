@@ -53,12 +53,14 @@ class BodyNode;
 namespace collision {
 
 class BulletCollisionNode;
+class BulletCollisionDetector;
 
 struct btUserData
 {
     dynamics::BodyNode* bodyNode;
     dynamics::Shape* shape;
     BulletCollisionNode* btCollNode;
+    BulletCollisionDetector* btCollDet;
 };
 
 /// @brief

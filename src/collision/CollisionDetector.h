@@ -139,8 +139,7 @@ public:
                                  bool _calculateContactPoints) = 0;
 
     /// @brief
-    bool isCollidable(const CollisionNode* _node1,
-                      const CollisionNode* _node2);
+    bool isCollidable(const CollisionNode* _node1, const CollisionNode* _node2);
 
 protected:
     /// @brief
