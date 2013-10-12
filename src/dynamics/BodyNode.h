@@ -73,9 +73,10 @@ Runge-Kutta and fourth-order Runge Kutta.
 #ifndef DART_DYNAMICS_BODYNODE_H
 #define DART_DYNAMICS_BODYNODE_H
 
-#include <Eigen/StdVector>
+#include <map>
 
 #include <Eigen/Dense>
+#include <Eigen/StdVector>
 
 #include "math/Geometry.h"
 
