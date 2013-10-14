@@ -84,6 +84,8 @@ BodyNode::BodyNode(const std::string& _name)
       mB(Eigen::Vector6d::Zero()),
       mBeta(Eigen::Vector6d::Zero()),
       mID(BodyNode::msBodyNodeCount++)
+//      mY(Eigen::Matrix6d::Zero()),
+//      mZ(Eigen::Matrix6d::Zero())
 {
 }
 
@@ -864,6 +866,16 @@ void BodyNode::update_F_fs()
     mF          += mB;
 
     assert(!math::isNan(mF));
+}
+
+void BodyNode::updateY()
+{
+    mY = math::dAdT(mParentJoint->getLocalTransform().inverse()) * (Eigen::Matrix6d::Identity() - mAI * mParentJoint->getLocalJacobian() * mPsi * mParentJoint->getLocalJacobian().transpose());
+}
+
+void BodyNode::updateZ()
+{
+    mZ = math::dAdT(mParentJoint->getLocalTransform().inverse()) * (mAI * mParentJoint->getLocalJacobian() * mPsi);
 }
 
 void BodyNode::updateDampingForce()

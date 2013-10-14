@@ -422,6 +422,12 @@ public:
     void update_F_fs();
 
     /// @brief
+    void updateY();
+
+    /// @brief
+    void updateZ();
+
+    /// @brief
     void updateDampingForce();
 
     /// @brief Updates the mass matrix mM
@@ -549,7 +555,9 @@ protected:
 
     std::map<BodyNode*, math::Inertia> mImap;
     std::map<BodyNode*, math::Inertia> mAmap;
-    math::Inertia mY;
+
+    Eigen::Matrix6d mY;
+    math::Jacobian mZ;
 
     /// @brief
     Eigen::MatrixXd mM;

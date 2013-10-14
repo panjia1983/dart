@@ -490,6 +490,8 @@ void Skeleton::computeForwardDynamicsFS(
         (*rit)->updatePi();
         (*rit)->updateEta();
         (*rit)->updateBeta();
+        (*rit)->updateY();
+        (*rit)->updateZ();
 
         timerMFS.start();
         if (_equationsOfMotion)
