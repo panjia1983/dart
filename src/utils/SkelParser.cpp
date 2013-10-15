@@ -1106,7 +1106,7 @@ dynamics::FreeJoint* SkelParser::readFreeJoint(tinyxml2::XMLElement* _jointEleme
     if (hasElement(_jointElement, "init_vel"))
     {
         Eigen::Vector6d init_vel = getValueVector6d(_jointElement, "init_vel");
-        newFreeJoint->set_q(init_vel);
+        newFreeJoint->set_dq(init_vel);
     }
 
     return newFreeJoint;
