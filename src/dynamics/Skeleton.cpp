@@ -464,7 +464,9 @@ void Skeleton::computeForwardDynamicsID(
 }
 
 void Skeleton::computeForwardDynamicsFS(
-        const Eigen::Vector3d& _gravity, bool _equationsOfMotion)
+        const Eigen::Vector3d& _gravity,
+        double _timeStep,
+        bool _equationsOfMotion)
 {
     int n = getNumGenCoords();
 
@@ -486,7 +488,7 @@ void Skeleton::computeForwardDynamicsFS(
     {
         (*rit)->updateArticulatedInertia();
         (*rit)->updateBiasForce(_gravity);
-        (*rit)->updatePsi();
+        (*rit)->updatePsi(_timeStep);
         (*rit)->updatePi();
         (*rit)->updateEta();
         (*rit)->updateBeta();

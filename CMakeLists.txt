@@ -6,9 +6,9 @@ set(CMAKE_CXX_WARNING_LEVEL 4)
 project(dart)
 message(STATUS "Generate makefile/project file for DART")
 
-set(DART_MAJOR_VERSION "2")
-set(DART_MINOR_VERSION "6")
-set(DART_PATCH_VERSION "0precise")
+set(DART_MAJOR_VERSION "3")
+set(DART_MINOR_VERSION "0")
+set(DART_PATCH_VERSION "0")
 set(PKG_DESC "Dynamic Animation and Robotics Toolkit.")
 set(DART_VERSION "${DART_MAJOR_VERSION}.${DART_MINOR_VERSION}.${DART_PATCH_VERSION}")
 set(PKG_EXTERNAL_DEPS "flann, ccd, fcl")
@@ -17,7 +17,10 @@ message(STATUS "CMAKE_SOURCE_DIR = ${CMAKE_SOURCE_DIR}")
 message(STATUS "CMAKE_BINARY_DIR = ${CMAKE_BINARY_DIR}")
 
 option(BUILD_SNOPT "Build with SNOPT optimizer" OFF)
-option(BUILD_ROBOTICS "Compile with Robotics API" ON)
+option(BUILD_CORE_ONLY "Build only the core of DART" OFF)
+if(NOT MSVC)
+    OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON)
+endif()
 
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING
@@ -91,18 +94,20 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-find_package(FLANN REQUIRED)
-find_package(TinyXML REQUIRED)
-find_package(TinyXML2 REQUIRED)
-
-# urdfdom
-find_package(urdfdom REQUIRED)
-if(MSVC)
-    set(urdfdom_LIBRARIES optimized urdfdom_sensor      debug urdfdom_sensord
-                          optimized urdfdom_model_state debug urdfdom_model_stated
-                          optimized urdfdom_model       debug urdfdom_modeld
-                          optimized urdfdom_world       debug urdfdom_worldd
-                          optimized console_bridge      debug console_bridged)
+if(NOT BUILD_CORE_ONLY)
+  find_package(FLANN REQUIRED)
+  find_package(TinyXML REQUIRED)
+  find_package(TinyXML2 REQUIRED)
+  
+  # urdfdom
+  find_package(urdfdom REQUIRED)
+  if(MSVC)
+      set(urdfdom_LIBRARIES optimized urdfdom_sensor      debug urdfdom_sensord
+                            optimized urdfdom_model_state debug urdfdom_model_stated
+                            optimized urdfdom_model       debug urdfdom_modeld
+                            optimized urdfdom_world       debug urdfdom_worldd
+                            optimized console_bridge      debug console_bridged)
+  endif()
 endif()
 
 include_directories(BEFORE src)
@@ -113,10 +118,13 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${GLUT_INCLUDE_DIR})
 
-include_directories(${FLANN_INCLUDE_DIRS})
-include_directories(${urdfdom_INCLUDE_DIRS})
-include_directories(${TinyXML_INCLUDE_DIRS})
-include_directories(${TinyXML2_INCLUDE_DIRS})
+if(NOT BUILD_CORE_ONLY)
+  include_directories(${FLANN_INCLUDE_DIRS})
+  include_directories(${urdfdom_INCLUDE_DIRS})
+  include_directories(${TinyXML_INCLUDE_DIRS})
+  include_directories(${TinyXML2_INCLUDE_DIRS})
+endif()
+
 include_directories("${CMAKE_BINARY_DIR}/src")
 
 link_directories("${CMAKE_BINARY_DIR}/lib")
@@ -124,12 +132,18 @@ link_directories("${CMAKE_INSTALL_PREFIX}/lib")
 link_directories(${Boost_LIBRARY_DIRS})
 
 set(DART_CORE_DEPENDENCIES ${FCL_LIBRARIES} ${Assimp_LIBRARIES} ${Boost_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-set(DART_DEPENDENCIES ${urdfdom_LIBRARIES} ${TinyXML_LIBRARIES} ${TinyXML2_LIBRARIES})
+if(NOT BUILD_CORE_ONLY)
+  set(DART_DEPENDENCIES ${urdfdom_LIBRARIES} ${TinyXML_LIBRARIES} ${TinyXML2_LIBRARIES})
+endif()
 
 ###############
 # Generate the Dart CMake Config file
-configure_file(cmake/DARTConfig.cmake.in "${CMAKE_BINARY_DIR}/cmake/DARTConfig.cmake" @ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/cmake/DARTConfig.cmake DESTINATION share/dart)
+configure_file(cmake/DARTCoreConfig.cmake.in "${CMAKE_BINARY_DIR}/cmake/DARTCoreConfig.cmake" @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/cmake/DARTCoreConfig.cmake DESTINATION share/dartcore)
+if(NOT BUILD_CORE_ONLY)
+  configure_file(cmake/DARTConfig.cmake.in "${CMAKE_BINARY_DIR}/cmake/DARTConfig.cmake" @ONLY)
+  install(FILES ${CMAKE_BINARY_DIR}/cmake/DARTConfig.cmake DESTINATION share/dart)
+endif()
 
 set(PC_CONFIG_IN ${CMAKE_SOURCE_DIR}/cmake/dart.pc.in)
 set(PC_CONFIG_OUT ${CMAKE_BINARY_DIR}/cmake/dart.pc)
@@ -138,11 +152,16 @@ install(FILES ${PC_CONFIG_OUT} DESTINATION lib/pkgconfig)
 
 ###############
 add_subdirectory(src)
-enable_testing()
-add_subdirectory(unittests)
-add_subdirectory(apps)
+if(NOT BUILD_CORE_ONLY)
+  enable_testing()
+  add_subdirectory(unittests)
+  add_subdirectory(apps)
+endif()
 
-install(EXPORT DARTTargets DESTINATION share/dart)
+install(EXPORT DARTCoreTargets DESTINATION share/dartcore)
+if(NOT BUILD_CORE_ONLY)
+  install(EXPORT DARTTargets DESTINATION share/dart)
+endif()
 
 ###############
 # Add an "uninstall" target
