@@ -476,11 +476,11 @@ void Skeleton::computeForwardDynamicsFS(
 
     // We assume that updateForwardKinematics() is called before
 
-    static common::Timer timerMFS("M_FS");
-    timerMFS.start();
+//    static common::Timer timerMFS("M_FS");
+//    timerMFS.start();
     if (_equationsOfMotion)
         mM_FS.setZero(n,n);
-    timerMFS.stop();
+//    timerMFS.stop();
 
     // Backward recursion
     for (std::vector<BodyNode*>::reverse_iterator rit = mBodyNodes.rbegin();
@@ -495,27 +495,27 @@ void Skeleton::computeForwardDynamicsFS(
         (*rit)->updateY();
         (*rit)->updateZ();
 
-        timerMFS.start();
+//        timerMFS.start();
         if (_equationsOfMotion)
             (*rit)->aggregateMassFS(mM_FS);
-        timerMFS.stop();
+//        timerMFS.stop();
     }
 
-    static common::Timer timerMInvFS("MInv_FS");
-    timerMInvFS.start();
+//    static common::Timer timerMInvFS("MInv_FS");
+//    timerMInvFS.start();
     if (_equationsOfMotion)
         mMInv_FS.setZero(n,n);
-    timerMInvFS.stop();
+//    timerMInvFS.stop();
 
     if (_equationsOfMotion)
     {
-        timerMInvFS.start();
+//        timerMInvFS.start();
         for (int i = 0; i < mBodyNodes.size(); ++i)
         {
             BodyNode* bodyNode = mBodyNodes[i];
-            bodyNode->aggregateMassInverseFS(mMInv_FS, bodyNode);
+            //bodyNode->aggregateMassInverseFS(mMInv_FS, bodyNode);
         }
-        timerMInvFS.stop();
+//        timerMInvFS.stop();
     }
 
     // Forward recursion
