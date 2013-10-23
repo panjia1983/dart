@@ -62,38 +62,38 @@ using namespace dynamics;
 #define EOM_TOL 0.01
 
 /******************************************************************************/
-//TEST(EOM, SinglePendulum)
-//{
-//    simulation::World* myWorld = utils::SkelParser::readSkelFile(
-//            DART_DATA_PATH"/skel/test/single_pendulum.skel");
-//    EXPECT_TRUE(myWorld != NULL);
+TEST(EOM, SinglePendulum)
+{
+    simulation::World* myWorld = utils::SkelParser::readSkelFile(
+            DART_DATA_PATH"/skel/test/single_pendulum.skel");
+    EXPECT_TRUE(myWorld != NULL);
 
-//    myWorld->setGravity(Eigen::Vector3d(0.0, 0.0, -9.81));
+    myWorld->setGravity(Eigen::Vector3d(0.0, 0.0, -9.81));
 
-//    dynamics::Skeleton* pendulum = myWorld->getSkeleton("single_pendulum");
-//    EXPECT_TRUE(pendulum != NULL);
+    dynamics::Skeleton* pendulum = myWorld->getSkeleton("single_pendulum");
+    EXPECT_TRUE(pendulum != NULL);
 
-//    double simTime = 2.0;
-//    double timeStep = myWorld->getTimeStep();
-//    int nSteps = simTime / timeStep;
+    double simTime = 2.0;
+    double timeStep = myWorld->getTimeStep();
+    int nSteps = simTime / timeStep;
 
-//    for (int i = 0; i < nSteps; i++)
-//    {
-//        myWorld->step();
+    for (int i = 0; i < nSteps; i++)
+    {
+        myWorld->step();
 
-//        // mass matrix
-//        Eigen::MatrixXd M = pendulum->getMassMatrix();
-//        Eigen::MatrixXd M_FS = pendulum->getMassMatrixFS();
+        // mass matrix
+        Eigen::MatrixXd M = pendulum->getMassMatrix();
+        Eigen::MatrixXd M_FS = pendulum->getMassMatrixFS();
 
-//        if (!equals(M, M_FS))
-//        {
-//            std::cout << "M   : " << M << std::endl;
-//            std::cout << "M_FS: " << M_FS << std::endl;
-//        }
+        if (!equals(M, M_FS))
+        {
+            std::cout << "M   : " << M << std::endl;
+            std::cout << "M_FS: " << M_FS << std::endl;
+        }
 
-//        EXPECT_TRUE(equals(M, M_FS));
+        EXPECT_TRUE(equals(M, M_FS));
 
-//        // inverse mass matrix
+        // inverse mass matrix
 //        Eigen::MatrixXd MInv = pendulum->getInvMassMatrix();
 //        Eigen::MatrixXd MInv_FS = pendulum->getInvMassMatrixFS();
 
@@ -104,8 +104,8 @@ using namespace dynamics;
 //        }
 
 //        EXPECT_TRUE(equals(MInv, MInv_FS));
-//    }
-//}
+    }
+}
 
 /******************************************************************************/
 TEST(EOM, DoulbePendulum)
@@ -142,56 +142,64 @@ TEST(EOM, DoulbePendulum)
         EXPECT_TRUE(equals(M, M_FS));
 
         // inverse mass matrix
-        Eigen::MatrixXd MInv = pendulum->getInvMassMatrix();
-        Eigen::MatrixXd MInv_FS = pendulum->getInvMassMatrixFS();
+//        Eigen::MatrixXd MInv = pendulum->getInvMassMatrix();
+//        Eigen::MatrixXd MInv_FS = pendulum->getInvMassMatrixFS();
 
-        if (!equals(MInv, MInv_FS))
-        {
-            std::cout << "MInv   : \n" << MInv << std::endl;
-            std::cout << "MInv_FS: \n" << MInv_FS << std::endl;
-        }
+//        if (!equals(MInv, MInv_FS))
+//        {
+//            std::cout << "MInv   : \n" << MInv << std::endl;
+//            std::cout << "MInv_FS: \n" << MInv_FS << std::endl;
+//        }
 
-        EXPECT_TRUE(equals(MInv, MInv_FS));
+//        EXPECT_TRUE(equals(MInv, MInv_FS));
     }
 }
 
 /******************************************************************************/
-//TEST(EOM, FullBody1)
-//{
-//    double tol = 1e-4;
+TEST(EOM, FullBody1)
+{
+    double tol = 1e-4;
 
-//    simulation::World* myWorld = utils::SkelParser::readSkelFile(
-//            DART_DATA_PATH"/skel/fullbody1.skel");
-//    EXPECT_TRUE(myWorld != NULL);
+    simulation::World* myWorld = utils::SkelParser::readSkelFile(
+            DART_DATA_PATH"/skel/fullbody1.skel");
+    EXPECT_TRUE(myWorld != NULL);
 
-//    myWorld->setGravity(Eigen::Vector3d(0.0, 0.0, -9.81));
+    myWorld->setGravity(Eigen::Vector3d(0.0, 0.0, -9.81));
 
-//    dynamics::Skeleton* pendulum = myWorld->getSkeleton(0);
-//    EXPECT_TRUE(pendulum != NULL);
+    dynamics::Skeleton* pendulum = myWorld->getSkeleton(0);
+    EXPECT_TRUE(pendulum != NULL);
 
-//    double simTime = 2.000;
-//    double timeStep = myWorld->getTimeStep();
-//    int nSteps = simTime / timeStep;
+    double simTime = 2.000;
+    double timeStep = myWorld->getTimeStep();
+    int nSteps = simTime / timeStep;
 
-//    for (int i = 0; i < nSteps; i++)
-//    {
-//        myWorld->step();
+    for (int i = 0; i < nSteps; i++)
+    {
+        myWorld->step();
 
-//        Eigen::MatrixXd M = pendulum->getMassMatrix();
-//        Eigen::MatrixXd M_FS = pendulum->getMassMatrixFS();
+        Eigen::MatrixXd M = pendulum->getMassMatrix();
+        Eigen::MatrixXd M_FS = pendulum->getMassMatrixFS();
+
+        if (!equals(M, M_FS))
+        {
+            std::cout << "M   : \n" << M << std::endl;
+            std::cout << "M_FS: \n" << M_FS << std::endl;
+        }
+
+        EXPECT_TRUE(equals(M, M_FS));
 
 //        Eigen::MatrixXd MInv = pendulum->getInvMassMatrix();
 //        Eigen::MatrixXd MInv_FS = pendulum->getInvMassMatrixFS();
 
-//        if (!equals(M, M_FS))
+//        if (!equals(MInv, MInv_FS))
 //        {
-//            std::cout << "M   : \n" << M << std::endl;
-//            std::cout << "M_FS: \n" << M_FS << std::endl;
+//            std::cout << "MInv   : \n" << MInv << std::endl;
+//            std::cout << "MInv_FS: \n" << MInv_FS << std::endl;
 //        }
 
-//        EXPECT_TRUE(equals(M, M_FS));
-//    }
-//}
+//        EXPECT_TRUE(equals(MInv, MInv_FS));
+    }
+}
 
 /******************************************************************************/
 int main(int argc, char* argv[])
