@@ -762,6 +762,8 @@ void BodyNode::updateGeneralizedForce(bool _withDampingForces)
 //    if (_withDampingForces)
 //        mF -= mFDamp;
 
+    assert(!math::isNan(J.transpose()*mF));
+
     mParentJoint->set_tau(J.transpose()*mF);
 }
 
@@ -776,6 +778,8 @@ void BodyNode::updateArticulatedInertia()
                     (*it)->getParentJoint()->getLocalTransform().inverse(),
                     (*it)->mPi);
     }
+
+    assert(!math::isNan(mAI));
 }
 
 void BodyNode::updateBiasForce(const Eigen::Vector3d& _gravity)
@@ -820,12 +824,16 @@ void BodyNode::updatePsi(double _timeStep)
     {
         mPsi = (mParentJoint->getLocalJacobian().transpose() * mAI_S).inverse();
     }
+
+    assert(!math::isNan(mPsi));
 }
 
 void BodyNode::updatePi()
 {
     mPi            = mAI;
     mPi.noalias() -= mAI_S*mPsi*mAI_S.transpose();
+
+    assert(!math::isNan(mPi));
 }
 
 void BodyNode::updateBeta()
@@ -870,6 +878,8 @@ void BodyNode::update_ddq()
     }
 
     mParentJoint->set_ddq(ddq);
+
+    assert(!math::isNan(ddq));
 }
 
 void BodyNode::update_F_fs()
