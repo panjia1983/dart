@@ -38,8 +38,9 @@
 
 #include "dynamics/BodyNode.h"
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
+#include <stack>
 
 #include "common/Console.h"
 #include "math/Helpers.h"
@@ -175,6 +176,19 @@ int BodyNode::getNumChildBodyNodes() const
     return mChildBodyNodes.size();
 }
 
+BodyNode* BodyNode::getDescendantBodyNode(int _idx) const
+{
+    assert((0 <= _idx && _idx < mDescendantBodyNodes.size()) &&
+           "Invalid index of mDescendants");
+
+    return mDescendantBodyNodes[_idx];
+}
+
+int BodyNode::getNumDescendantBodyNodes() const
+{
+    return mDescendantBodyNodes.size();
+}
+
 void BodyNode::addMarker(Marker* _marker)
 {
     mMarkers.push_back(_marker);
@@ -192,19 +206,19 @@ Marker* BodyNode::getMarker(int _idx) const
 
 bool BodyNode::dependsOn(int _genCoordIndex) const
 {
-    return binary_search(mDependentDofIndexes.begin(),
-                         mDependentDofIndexes.end(),
-                         _genCoordIndex);
+    return std::binary_search(mDependentGenCoordIndices.begin(),
+                              mDependentGenCoordIndices.end(),
+                              _genCoordIndex);
 }
 
 int BodyNode::getNumDependentDofs() const
 {
-    return mDependentDofIndexes.size();
+    return mDependentGenCoordIndices.size();
 }
 
 int BodyNode::getDependentDof(int _arrayIndex) const
 {
-    return mDependentDofIndexes[_arrayIndex];
+    return mDependentGenCoordIndices[_arrayIndex];
 }
 
 const Eigen::Isometry3d& BodyNode::getWorldTransform() const
@@ -276,34 +290,60 @@ void BodyNode::init(Skeleton* _skeleton, int _skeletonIndex)
 {
     assert(_skeleton);
 
-    mSkeleton = _skeleton;
+    mSkeleton  = _skeleton;
     mSkelIndex = _skeletonIndex;
     mParentJoint->mSkelIndex = _skeletonIndex;
 
-    // fill list of generalized coordinates this node depends on
+    // Fill the list of generalized coordinates this node depends on, and sort
+    // it.
     if (mParentBodyNode)
-        mDependentDofIndexes = mParentBodyNode->mDependentDofIndexes;
+        mDependentGenCoordIndices = mParentBodyNode->mDependentGenCoordIndices;
     else
-        mDependentDofIndexes.clear();
+        mDependentGenCoordIndices.clear();
     for (int i = 0; i < mParentJoint->getNumGenCoords(); i++)
-        mDependentDofIndexes.push_back(mParentJoint->getGenCoord(i)->getSkeletonIndex());
+        mDependentGenCoordIndices.push_back(mParentJoint->getGenCoord(i)->getSkeletonIndex());
+    std::sort(mDependentGenCoordIndices.begin(), mDependentGenCoordIndices.end());
 
 #ifndef NDEBUG
-    for (int i = 0; i < (int)mDependentDofIndexes.size() - 1; i++)
+    // Check whether there is duplicates of indices.
+    for (int i = 0; i < mDependentGenCoordIndices.size() - 1; i++)
     {
-        for (int j = i + 1; j < mDependentDofIndexes.size(); j++)
-            if (mDependentDofIndexes[i] == mDependentDofIndexes[j])
+        for (int j = i + 1; j < mDependentGenCoordIndices.size(); j++)
+            if (mDependentGenCoordIndices[i] == mDependentGenCoordIndices[j])
             {
-                dterr << "Skeleton ID of Generalized coordinates is duplicated."
+                dterr << "Skeleton ID of generalized coordinate is duplicated."
                       << std::endl;
+                assert(0);
             }
     }
 #endif
 
-    const int numDepDofs = getNumDependentDofs();
-    mBodyJacobian      = math::Jacobian::Zero(6,numDepDofs);
-    mBodyJacobianTimeDeriv = math::Jacobian::Zero(6,numDepDofs);
-    mM                 = Eigen::MatrixXd::Zero(numDepDofs, numDepDofs);
+    // Fill the list of decendants of this body node. The list is ordered with
+    // DFS (Depth First Search).
+    mDescendantBodyNodes.clear();
+    std::stack<BodyNode*> stack;
+    for (std::vector<BodyNode*>::const_reverse_iterator it =
+         mChildBodyNodes.rbegin(); it != mChildBodyNodes.rend(); ++it)
+    {
+        stack.push(*it);
+    }
+    while (!stack.empty())
+    {
+        BodyNode* itBodyNode = stack.top();
+        stack.pop();
+        mDescendantBodyNodes.push_back(itBodyNode);
+
+        for (int i = 0; i < itBodyNode->getNumChildBodyNodes(); ++i)
+        {
+            stack.push(itBodyNode->getChildBodyNode(i));
+        }
+    }
+
+    // Set dimensions of dynamics matrices and vectors.
+    const int numDepDofs   = getNumDependentDofs();
+    mBodyJacobian          = math::Jacobian::Zero(6, numDepDofs);
+    mBodyJacobianTimeDeriv = math::Jacobian::Zero(6, numDepDofs);
+    mM                     = Eigen::MatrixXd::Zero(numDepDofs, numDepDofs);
 }
 
 void BodyNode::draw(renderer::RenderInterface* _ri,
@@ -920,14 +960,14 @@ void BodyNode::aggregateExternalForces(Eigen::VectorXd& _extForce)
     Eigen::VectorXd localForce = mBodyJacobian.transpose() * mFext;
 
     for(int i = 0; i < getNumDependentDofs(); i++)
-        _extForce(mDependentDofIndexes[i]) += localForce(i);
+        _extForce(mDependentGenCoordIndices[i]) += localForce(i);
 }
 
 void BodyNode::aggregateMass(Eigen::MatrixXd& _M)
 {
     for(int i = 0; i < getNumDependentDofs(); i++)
         for(int j = 0; j < getNumDependentDofs(); j++)
-            _M(mDependentDofIndexes[i], mDependentDofIndexes[j]) += mM(i, j);
+            _M(mDependentGenCoordIndices[i], mDependentGenCoordIndices[j]) += mM(i, j);
 }
 
 void BodyNode::aggregateMassFS(Eigen::MatrixXd& _M)

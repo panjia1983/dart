@@ -209,6 +209,12 @@ public:
     int getNumChildBodyNodes() const;
 
     /// @brief
+    BodyNode* getDescendantBodyNode(int _idx) const;
+
+    /// @brief
+    int getNumDescendantBodyNodes() const;
+
+    /// @brief
     void addMarker(Marker* _marker);
 
     /// @brief
@@ -509,11 +515,15 @@ protected:
     /// @brief
     std::vector<BodyNode*> mChildBodyNodes;
 
+    /// @brief The list of descendants of this body node including child body
+    /// nodes.
+    std::vector<BodyNode*> mDescendantBodyNodes;
+
     /// @brief List of markers associated
     std::vector<Marker*> mMarkers;
 
     /// @brief A list of dependent dof indices
-    std::vector<int> mDependentDofIndexes;
+    std::vector<int> mDependentGenCoordIndices;
 
     //--------------------------------------------------------------------------
     // Dynamical Properties
