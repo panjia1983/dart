@@ -450,7 +450,7 @@ public:
     void aggregateMassFS(Eigen::MatrixXd& _M);
 
     /// @brief
-    void aggregateMassInverseFS(Eigen::MatrixXd& _MInv, BodyNode* _bodyNode);
+    void aggregateMassInverseFS(Eigen::MatrixXd& _MInv);
 
 protected:
     /// @brief Initialize the vector memebers with proper sizes.
@@ -565,6 +565,7 @@ protected:
 
     std::map<BodyNode*, math::Inertia> mImap;
     std::map<BodyNode*, math::Inertia> mAmap;
+    math::Inertia mA;
 
     Eigen::Matrix6d mY;
     math::Jacobian mZ;

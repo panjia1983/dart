@@ -513,7 +513,7 @@ void Skeleton::computeForwardDynamicsFS(
         for (int i = 0; i < mBodyNodes.size(); ++i)
         {
             BodyNode* bodyNode = mBodyNodes[i];
-            //bodyNode->aggregateMassInverseFS(mMInv_FS, bodyNode);
+            bodyNode->aggregateMassInverseFS(mMInv_FS);
         }
 //        timerMInvFS.stop();
     }

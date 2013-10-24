@@ -1052,55 +1052,75 @@ void BodyNode::aggregateMassFS(Eigen::MatrixXd& _M)
     }
 }
 
-void BodyNode::aggregateMassInverseFS(Eigen::MatrixXd& _MInv, BodyNode* _bodyNode)
+void BodyNode::aggregateMassInverseFS(Eigen::MatrixXd& _MInv)
 {
-    int n = mParentJoint->getNumGenCoords();
+    int nGenCoords   = mParentJoint->getNumGenCoords();
+    int nDescendants = mDescendantBodyNodes.size();
     const math::Jacobian& J = mParentJoint->getLocalJacobian();
+    const Eigen::Isometry3d& T = mParentJoint->getLocalTransform();
+
+    // Diagonal term M(j,j)
+    Eigen::MatrixXd MInv = mPsi;
+
+    if (mParentBodyNode)
+    {
+        math::Jacobian Z = math::dAdT(T.inverse()) * (mAI * J * mPsi);
+        MInv += Z.transpose() * mParentBodyNode->mA * Z;
+    }
+    if (mChildBodyNodes.size() > 0)
+    {
+        mA = J * mPsi * J.transpose();
+        if (mParentBodyNode)
+        {
+            //mA += () * math::AdT(T) * mParentBodyNode->mA;
+        }
+    }
+
+
 
     // M(j,j)
-    if (_bodyNode == this)
-    {
-        Eigen::MatrixXd MInv(n,n);
-        mAmap[this] = Eigen::Matrix6d::Zero();
-        Eigen::Matrix<double,6,Eigen::Dynamic> Kappa =
-                Eigen::MatrixXd::Zero(6,n);
+//    {
+//        Eigen::MatrixXd MInv(nGenCoords ,nGenCoords );
+//        mAmap[this] = Eigen::Matrix6d::Zero();
+//        Eigen::Matrix<double,6,Eigen::Dynamic> Kappa =
+//                Eigen::MatrixXd::Zero(6,nGenCoords );
 
-        mY = math::Inertia::Zero();
+//        mY = math::Inertia::Zero();
 
-        BodyNode* parentBodyNode = _bodyNode->mParentBodyNode;
+//        BodyNode* parentBodyNode = _bodyNode->mParentBodyNode;
 
-        if (parentBodyNode)
-        {
-            const Joint* parentJoint = parentBodyNode->mParentJoint;
-            const math::Jacobian& parentJ = parentJoint->getLocalJacobian();
-            const Eigen::MatrixXd& parentPsi = parentBodyNode->mPsi;
+//        if (parentBodyNode)
+//        {
+//            const Joint* parentJoint = parentBodyNode->mParentJoint;
+//            const math::Jacobian& parentJ = parentJoint->getLocalJacobian();
+//            const Eigen::MatrixXd& parentPsi = parentBodyNode->mPsi;
 
-            mY = math::dAdT(parentBodyNode->getParentJoint()->getLocalTransform().inverse()) * parentBodyNode->mPi;
+//            mY = math::dAdT(parentBodyNode->getParentJoint()->getLocalTransform().inverse()) * parentBodyNode->mPi;
 
-            mAmap[this] = parentJ * parentPsi * parentJ.transpose();
-            mAmap[this] += parentBodyNode->mY.transpose() * parentBodyNode->mAmap[this];
-        }
+//            mAmap[this] = parentJ * parentPsi * parentJ.transpose();
+//            mAmap[this] += parentBodyNode->mY.transpose() * parentBodyNode->mAmap[this];
+//        }
 
-        MInv = mPsi + Kappa.transpose() * mAmap[this] * Kappa;
+//        MInv = mPsi + Kappa.transpose() * mAmap[this] * Kappa;
 
-        // Assigning
-        for(int i = 0; i < n; i++)
-        {
-            int iSkelIdx = mParentJoint->getGenCoord(i)->getSkeletonIndex();
+//        // Assigning
+//        for(int i = 0; i < nGenCoords ; i++)
+//        {
+//            int iSkelIdx = mParentJoint->getGenCoord(i)->getSkeletonIndex();
 
-            for(int j = 0; j < n; j++)
-            {
-                int jSkelIdx = mParentJoint->getGenCoord(j)->getSkeletonIndex();
+//            for(int j = 0; j < nGenCoords ; j++)
+//            {
+//                int jSkelIdx = mParentJoint->getGenCoord(j)->getSkeletonIndex();
 
-                _MInv(iSkelIdx, jSkelIdx) += MInv(i, j);
-            }
-        }
-    }
+//                _MInv(iSkelIdx, jSkelIdx) += MInv(i, j);
+//            }
+//        }
+//    }
     // M(j,k), k = lambda(j), lambda(lambda(j)), ... , base
-    else
-    {
+//    else
+//    {
 
-    }
+//    }
 
 
 }
